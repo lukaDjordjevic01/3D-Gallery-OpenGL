@@ -1,20 +1,51 @@
-// Gustav.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
 
 #include <iostream>
+#include <fstream>
+#include <sstream>
+
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
 
 int main()
 {
-    std::cout << "Hello World!\n";
+    if (!glfwInit()) // !0 == 1  | glfwInit inicijalizuje GLFW i vrati 1 ako je inicijalizovana uspjesno, a 0 ako nije
+    {
+        std::cout << "GLFW Biblioteka se nije ucitala! :(\n";
+        return 1;
+    }
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+    GLFWwindow* window;
+    unsigned int wWidth = 500;
+    unsigned int wHeight = 500;
+    const char wTitle[] = "[Generic Title]";
+    window = glfwCreateWindow(wWidth, wHeight, wTitle, NULL, NULL);
+    if (window == NULL) //Ako prozor nije napravljen
+    {
+        std::cout << "Prozor nije napravljen! :(\n";
+        glfwTerminate(); //Gasi GLFW
+        return 2; //Vrati kod za gresku
+    }
+    glfwMakeContextCurrent(window);
+    if (glewInit() != GLEW_OK)
+    {
+        std::cout << "GLEW nije mogao da se ucita! :'(\n";
+        return 3;
+    }
+
+    while (!glfwWindowShouldClose(window)) 
+    {
+        if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        {
+            glfwSetWindowShouldClose(window, GL_TRUE);
+        }
+        glClearColor(0.0, 0.0, 1.0, 1.0); //Podesavanje boje pozadine
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+    }
+
 }
-
-// Run program: Ctrl + F5 or Debug > Start Without Debugging menu
-// Debug program: F5 or Debug > Start Debugging menu
-
-// Tips for Getting Started: 
-//   1. Use the Solution Explorer window to add/manage files
-//   2. Use the Team Explorer window to connect to source control
-//   3. Use the Output window to see build output and other messages
-//   4. Use the Error List window to view errors
-//   5. Go to Project > Add New Item to create new code files, or Project > Add Existing Item to add existing code files to the project
-//   6. In the future, to open this project again, go to File > Open > Project and select the .sln file
