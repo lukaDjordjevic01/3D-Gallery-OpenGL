@@ -12,8 +12,13 @@
 unsigned int compileShader(GLenum type, const char* source);
 unsigned int createShader(const char* vsSource, const char* fsSource);
 static unsigned loadImageToTexture(const char* filePath);
+void drawBackgroundTexture(unsigned int shader, unsigned int VAO, unsigned int texture);
+void drawFrames(unsigned int VAO, unsigned int wWidth, unsigned int wHeight, int polygonMode);
 
-const int NUMBER_OF_BUFFERS = 1;
+const int NUMBER_OF_BUFFERS = 2;
+
+const int wallTextureIndex = 0;
+const int frameShapeIndex = 1;
 
 int main()
 {
@@ -27,8 +32,8 @@ int main()
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     GLFWwindow* window;
-    unsigned int wWidth = 1000;
-    unsigned int wHeight = 500;
+    unsigned int wWidth = 1200;
+    unsigned int wHeight = 700;
     const char wTitle[] = "[Generic Title]";
     window = glfwCreateWindow(wWidth, wHeight, wTitle, NULL, NULL);
     if (window == NULL) //Ako prozor nije napravljen
@@ -43,7 +48,12 @@ int main()
         std::cout << "GLEW nije mogao da se ucita! :'(\n";
         return 3;
     }
-
+    unsigned int VAO[NUMBER_OF_BUFFERS];
+    glGenVertexArrays(NUMBER_OF_BUFFERS, VAO);
+    unsigned int VBO[NUMBER_OF_BUFFERS];
+    glGenBuffers(NUMBER_OF_BUFFERS, VBO);
+    unsigned int EBO[NUMBER_OF_BUFFERS];
+    glGenBuffers(NUMBER_OF_BUFFERS, EBO);
 
     #pragma region WallTexture
     float wallVertices[] =
@@ -62,24 +72,17 @@ int main()
 
     unsigned int wallStride = (2 + 2) * sizeof(float);
 
-    unsigned int VAO[NUMBER_OF_BUFFERS];
-    glGenVertexArrays(NUMBER_OF_BUFFERS, VAO);
-    glBindVertexArray(VAO[0]);
+    glBindVertexArray(VAO[wallTextureIndex]);
 
-    unsigned int VBO[NUMBER_OF_BUFFERS];
-    glGenBuffers(NUMBER_OF_BUFFERS, VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO[wallTextureIndex]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(wallVertices), wallVertices, GL_STATIC_DRAW);
-
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, wallStride, (void*)0);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, wallStride, (void*)(2 * sizeof(float)));
     glEnableVertexAttribArray(1);
-    //glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    unsigned int EBO[NUMBER_OF_BUFFERS];
-    glGenBuffers(NUMBER_OF_BUFFERS, EBO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[0]);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[wallTextureIndex]);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(wallIndecies), wallIndecies, GL_STATIC_DRAW);
 
     glBindVertexArray(0);
@@ -100,6 +103,56 @@ int main()
 
     #pragma endregion
 
+    #pragma region Frames
+    //y -> +- 0.6
+    //x -> +- 0.5
+    float frameVertices[] =
+    {
+       -0.5, 0.6, //0
+       -0.5, 0.5, //1
+       -0.5, -0.5, //2
+       -0.5, -0.6, //3
+       -0.4, 0.6, //4
+       -0.4, -0.6, //5
+       0.4, 0.6, //6
+       0.4, -0.6, //7
+       0.5, 0.6, //8
+       0.5, 0.5, //9
+       0.5, -0.5, //10
+       0.5, -0.6 //11
+    };
+
+    unsigned int frameIndecies[] =
+    {
+        0, 5, 3,
+        0, 4, 5,
+
+        0, 1, 8,
+        8, 9, 1,
+
+        2, 11, 3,
+        10, 2, 11,
+
+        6, 11, 8,
+        7, 6, 11
+    };
+    unsigned int frameStride = 2 * sizeof(float);
+
+    glBindVertexArray(VAO[frameShapeIndex]);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO[frameShapeIndex]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(frameVertices), frameVertices, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, frameStride, (void*)0);
+    glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[frameShapeIndex]);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(frameIndecies), frameIndecies, GL_STATIC_DRAW);
+
+    glBindVertexArray(0);
+    #pragma endregion
+
+    int polygonMode = GL_FILL;
 
     while (!glfwWindowShouldClose(window)) 
     {
@@ -107,18 +160,12 @@ int main()
         {
             glfwSetWindowShouldClose(window, GL_TRUE);
         }
-        //glClearColor(0.0, 0.0, 0.0, 1.0); //Podesavanje boje pozadine
         glClear(GL_COLOR_BUFFER_BIT);
 
-        glUseProgram(wallTextureShader);
-        glBindVertexArray(VAO[0]);
+        glViewport(0, 0, wWidth, wHeight);
+        drawBackgroundTexture(wallTextureShader, VAO[wallTextureIndex], wallTexture);
 
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, wallTexture);
-
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)(0 * sizeof(unsigned int)));
-        //glDrawArrays(GL_TRIANGLES, 0, 3);
-        glBindTexture(GL_TEXTURE_2D, 0);
+        drawFrames(VAO[frameShapeIndex], wWidth, wHeight, polygonMode);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -234,4 +281,41 @@ static unsigned loadImageToTexture(const char* filePath) {
         stbi_image_free(ImageData);
         return 0;
     }
+}
+
+void drawBackgroundTexture(unsigned int shader, unsigned int VAO, unsigned int texture)
+{
+    glUseProgram(shader);
+    glBindVertexArray(VAO);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture);
+
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)(0 * sizeof(unsigned int)));
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glUseProgram(0);
+    glBindVertexArray(0);
+}
+
+void drawFrames(unsigned int VAO, unsigned int wWidth, unsigned int wHeight, int polygonMode) 
+{
+    glBindVertexArray(VAO);
+    glPolygonMode(GL_FRONT_AND_BACK, polygonMode);
+    glLineWidth(3.0f);
+    glPointSize(10.0f);
+
+    glViewport(0, 0, wWidth / 3, wHeight);
+    glDrawElements(GL_TRIANGLES, 24, GL_UNSIGNED_INT, (void*)(0 * sizeof(unsigned int)));
+
+    glViewport(wWidth / 3, 0, wWidth / 3, wHeight);
+    glDrawElements(GL_TRIANGLES, 24, GL_UNSIGNED_INT, (void*)(0 * sizeof(unsigned int)));
+
+    glViewport(2 * wWidth / 3, 0, wWidth / 3, wHeight);
+    glDrawElements(GL_TRIANGLES, 24, GL_UNSIGNED_INT, (void*)(0 * sizeof(unsigned int)));
+
+    glViewport(0, 0, wWidth, wHeight);
+    glBindVertexArray(0);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glLineWidth(1.0f);
+    glPointSize(1.0f);
 }
