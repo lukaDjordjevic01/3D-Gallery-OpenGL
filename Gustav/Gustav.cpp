@@ -15,11 +15,12 @@ static unsigned loadImageToTexture(const char* filePath);
 void drawBackgroundTexture(unsigned int shader, unsigned int VAO, unsigned int texture);
 void drawFrames(unsigned int VAO, unsigned int wWidth, unsigned int wHeight, int polygonMode);
 
-const int NUMBER_OF_BUFFERS = 3;
+const int NUMBER_OF_BUFFERS = 4;
 
 const int wallTextureIndex = 0;
 const int frameShapeIndex = 1;
 const int frameImageTextureIndex = 2;
+const int personalInfoTextureIndex = 3;
 
 
 int main()
@@ -229,6 +230,45 @@ int main()
 
     #pragma endregion
 
+    #pragma region PersonalInfoTexture
+    float personalInfoVertices[] =
+    {
+        0.6, -0.6, 0.0, 1.0,
+        0.6, -1.0, 0.0, 0.0,
+        1.0, -0.6, 1.0, 1.0,
+        1.0, -1.0, 1.0, 0.0
+    };
+
+    unsigned int personalInfoIndecies[] =
+    {
+        0, 1, 2,
+        1, 2, 3
+    };
+    unsigned int personalInfoTextureStride = (2 + 2) * sizeof(float);
+    glBindVertexArray(VAO[personalInfoTextureIndex]);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO[personalInfoTextureIndex]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(personalInfoVertices), personalInfoVertices, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, personalInfoTextureStride, (void*)0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, personalInfoTextureStride, (void*)(2 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[personalInfoTextureIndex]);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(personalInfoIndecies), personalInfoIndecies, GL_STATIC_DRAW);
+
+    glBindVertexArray(0);
+
+    unsigned personalInfoTexture = loadImageToTexture("res/personal_info.png");
+    glBindTexture(GL_TEXTURE_2D, personalInfoTexture);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    #pragma endregion
+
     int polygonMode = GL_FILL;
 
     while (!glfwWindowShouldClose(window)) 
@@ -291,6 +331,17 @@ int main()
         glViewport(0, 0, wWidth, wHeight);
         #pragma endregion
 
+        glUseProgram(wallTextureShader);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glBindVertexArray(VAO[personalInfoTextureIndex]);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, personalInfoTexture);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)(0 * sizeof(unsigned int)));
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glDisable(GL_BLEND);
+        glUseProgram(0);
+        glBindVertexArray(0);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
