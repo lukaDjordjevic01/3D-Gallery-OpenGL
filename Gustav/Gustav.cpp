@@ -199,8 +199,8 @@ int main()
 
     glBindTexture(GL_TEXTURE_2D, firstImageTexture);
     glGenerateMipmap(GL_TEXTURE_2D);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glBindTexture(GL_TEXTURE_2D, 0);
@@ -233,10 +233,32 @@ int main()
 
     while (!glfwWindowShouldClose(window)) 
     {
+        #pragma region KeyHandle
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         {
             glfwSetWindowShouldClose(window, GL_TRUE);
         }
+        if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
+        {
+            polygonMode = GL_POINT;
+            glUseProgram(frameImageTextureShader);
+            glUniform1i(glGetUniformLocation(frameImageTextureShader, "flipHorizontal"), 1);
+        }
+        else if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS)
+        {
+            polygonMode = GL_LINE;
+            glUseProgram(frameImageTextureShader);
+            glUniform1i(glGetUniformLocation(frameImageTextureShader, "flipVertical"), 1);
+        }
+        else if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS)
+        {
+            polygonMode = GL_FILL;
+            glUseProgram(frameImageTextureShader);
+            glUniform1i(glGetUniformLocation(frameImageTextureShader, "flipHorizontal"), 0);
+            glUniform1i(glGetUniformLocation(frameImageTextureShader, "flipVertical"), 0);
+        }
+        #pragma endregion
+
         glClear(GL_COLOR_BUFFER_BIT);
 
         glViewport(0, 0, wWidth, wHeight);
