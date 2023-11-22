@@ -12,15 +12,18 @@
 unsigned int compileShader(GLenum type, const char* source);
 unsigned int createShader(const char* vsSource, const char* fsSource);
 static unsigned loadImageToTexture(const char* filePath);
-void drawBackgroundTexture(unsigned int shader, unsigned int VAO, unsigned int texture);
+void drawBackgroundOrInfoTexture(unsigned int shader, unsigned int VAO, unsigned int texture);
 void drawFrames(unsigned int VAO, unsigned int wWidth, unsigned int wHeight, int polygonMode);
+void drawImages(unsigned int VAO, unsigned int wWidth, unsigned int wHeight, unsigned int shader, unsigned int textures[]);
 
-const int NUMBER_OF_BUFFERS = 4;
+const int NUMBER_OF_BUFFERS = 5;
+const int CIRCLE_POINTS = 30;
 
 const int wallTextureIndex = 0;
 const int frameShapeIndex = 1;
 const int frameImageTextureIndex = 2;
 const int personalInfoTextureIndex = 3;
+const int circleIndex = 4;
 
 
 int main()
@@ -269,7 +272,39 @@ int main()
     glBindTexture(GL_TEXTURE_2D, 0);
     #pragma endregion
 
+    #pragma region Circle
+    float circle[CIRCLE_POINTS * 2 + 4];
+    float r = 0.1;
+    circle[0] = 0;
+    circle[1] = 0;
+    int i;
+    for (i = 0; i <= CIRCLE_POINTS; i++)
+    {
+
+        circle[2 + 2 * i] = r * cos((3.141592 / 180) * (i * 360 / CIRCLE_POINTS));
+        circle[2 + 2 * i + 1] = r * sin((3.141592 / 180) * (i * 360 / CIRCLE_POINTS));
+    }
+
+    glBindVertexArray(VAO[circleIndex]);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO[circleIndex]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(circle), circle, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    glBindVertexArray(0);
+
+    unsigned int circleShader = createShader("circle.vert", "circle.frag");
+    unsigned int circlePosLoc = glGetUniformLocation(circleShader, "circlePos");
+    unsigned int circlePulseLoc = glGetUniformLocation(circleShader, "circlePulse");
+    #pragma endregion
+
     int polygonMode = GL_FILL;
+    float circleX = 0;
+    float circleY = 0;
+    float boundryX = 0.3;
+    float boundryY = 0.4;
+    bool shouldDrawCircle = false;
 
     while (!glfwWindowShouldClose(window)) 
     {
@@ -284,64 +319,95 @@ int main()
             glUseProgram(frameImageTextureShader);
             glUniform1i(glGetUniformLocation(frameImageTextureShader, "flipHorizontal"), 1);
         }
-        else if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS)
+        if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS)
         {
             polygonMode = GL_LINE;
             glUseProgram(frameImageTextureShader);
             glUniform1i(glGetUniformLocation(frameImageTextureShader, "flipVertical"), 1);
         }
-        else if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS)
+        if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS)
         {
             polygonMode = GL_FILL;
             glUseProgram(frameImageTextureShader);
             glUniform1i(glGetUniformLocation(frameImageTextureShader, "flipHorizontal"), 0);
             glUniform1i(glGetUniformLocation(frameImageTextureShader, "flipVertical"), 0);
         }
+        if (glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS)
+        {
+            circleX = 0;
+            circleY = 0;
+            shouldDrawCircle = true;
+        }
+        if (glfwGetKey(window, GLFW_KEY_5) == GLFW_PRESS)
+        {
+            shouldDrawCircle = false;
+        }
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        {
+            if (shouldDrawCircle && circleY <= boundryY)
+                circleY += 0.01;
+        }
+        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        {
+            if (shouldDrawCircle && circleY > -boundryY)
+                circleY -= 0.01;
+        }
+        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        {
+            if (shouldDrawCircle && circleX <= boundryX)
+                circleX += 0.01;
+        }
+        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        {
+            if (shouldDrawCircle && circleX >= -boundryX)
+                circleX -= 0.01;
+        }
         #pragma endregion
 
         glClear(GL_COLOR_BUFFER_BIT);
-
         glViewport(0, 0, wWidth, wHeight);
-        drawBackgroundTexture(wallTextureShader, VAO[wallTextureIndex], wallTexture);
+        drawBackgroundOrInfoTexture(wallTextureShader, VAO[wallTextureIndex], wallTexture);
 
+        #pragma region FramesDrawing
         drawFrames(VAO[frameShapeIndex], wWidth, wHeight, polygonMode);
-
-        #pragma region ImagesDrawing
-        glUseProgram(frameImageTextureShader);
-        glBindVertexArray(VAO[frameImageTextureIndex]);
-        glActiveTexture(GL_TEXTURE1);
-
-        glBindTexture(GL_TEXTURE_2D, firstImageTexture);
-        glViewport(0, 0, wWidth / 3, wHeight);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)(0 * sizeof(unsigned int)));
-        glBindTexture(GL_TEXTURE_2D, 0);
-
-        glBindTexture(GL_TEXTURE_2D, secondImageTexture);
-        glViewport(wWidth / 3, 0, wWidth / 3, wHeight);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)(0 * sizeof(unsigned int)));
-        glBindTexture(GL_TEXTURE_2D, 0);
-
-        glBindTexture(GL_TEXTURE_2D, thirdImageTexture);
-        glViewport(2 * wWidth / 3, 0, wWidth / 3, wHeight);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)(0 * sizeof(unsigned int)));
-        glBindTexture(GL_TEXTURE_2D, 0);
-        
-        glUseProgram(0);
-        glBindVertexArray(0);
-        glViewport(0, 0, wWidth, wHeight);
         #pragma endregion
 
-        glUseProgram(wallTextureShader);
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glBindVertexArray(VAO[personalInfoTextureIndex]);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, personalInfoTexture);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)(0 * sizeof(unsigned int)));
-        glBindTexture(GL_TEXTURE_2D, 0);
-        glDisable(GL_BLEND);
-        glUseProgram(0);
-        glBindVertexArray(0);
+        #pragma region ImagesDrawing
+        unsigned int textures[] =
+        {
+            firstImageTexture, secondImageTexture, thirdImageTexture
+        };
+        drawImages(VAO[frameImageTextureIndex], wWidth, wHeight, frameImageTextureShader, textures);
+        #pragma endregion
+
+        #pragma region PersonalInfoDrawing
+        drawBackgroundOrInfoTexture(wallTextureShader, VAO[personalInfoTextureIndex], personalInfoTexture);
+        #pragma endregion
+
+        #pragma region CircleDrawing
+        if (shouldDrawCircle) 
+        {
+            glUseProgram(circleShader);
+            glBindVertexArray(VAO[circleIndex]);
+            float time = glfwGetTime();
+            float pulsationSpeed = 0.8;
+            glUniform1f(circlePulseLoc, pulsationSpeed* time);
+            glUniform2f(circlePosLoc, circleX, circleY);
+
+            glViewport(0, 0, wWidth / 3, wHeight);
+            glDrawArrays(GL_TRIANGLE_FAN, 0, sizeof(circle) / (2 * sizeof(float)));
+
+            glViewport(wWidth / 3, 0, wWidth / 3, wHeight);
+            glDrawArrays(GL_TRIANGLE_FAN, 0, sizeof(circle) / (2 * sizeof(float)));
+
+            glViewport(2 * wWidth / 3, 0, wWidth / 3, wHeight);
+            glDrawArrays(GL_TRIANGLE_FAN, 0, sizeof(circle) / (2 * sizeof(float)));
+
+            glUseProgram(0);
+            glBindVertexArray(0);
+            glViewport(0, 0, wWidth, wHeight);
+        }
+        #pragma endregion
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -459,8 +525,10 @@ static unsigned loadImageToTexture(const char* filePath) {
     }
 }
 
-void drawBackgroundTexture(unsigned int shader, unsigned int VAO, unsigned int texture)
+void drawBackgroundOrInfoTexture(unsigned int shader, unsigned int VAO, unsigned int texture)
 {
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glUseProgram(shader);
     glBindVertexArray(VAO);
     glActiveTexture(GL_TEXTURE0);
@@ -469,10 +537,10 @@ void drawBackgroundTexture(unsigned int shader, unsigned int VAO, unsigned int t
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)(0 * sizeof(unsigned int)));
 
     glBindTexture(GL_TEXTURE_2D, 0);
+    glDisable(GL_BLEND);
     glUseProgram(0);
     glBindVertexArray(0);
 }
-
 void drawFrames(unsigned int VAO, unsigned int wWidth, unsigned int wHeight, int polygonMode) 
 {
     glBindVertexArray(VAO);
@@ -494,4 +562,29 @@ void drawFrames(unsigned int VAO, unsigned int wWidth, unsigned int wHeight, int
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glLineWidth(1.0f);
     glPointSize(1.0f);
+}
+void drawImages(unsigned int VAO, unsigned int wWidth, unsigned int wHeight, unsigned int shader, unsigned int textures[])
+{
+    glUseProgram(shader);
+    glBindVertexArray(VAO);
+    glActiveTexture(GL_TEXTURE1);
+
+    glBindTexture(GL_TEXTURE_2D, textures[0]);
+    glViewport(0, 0, wWidth / 3, wHeight);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)(0 * sizeof(unsigned int)));
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    glBindTexture(GL_TEXTURE_2D, textures[1]);
+    glViewport(wWidth / 3, 0, wWidth / 3, wHeight);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)(0 * sizeof(unsigned int)));
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    glBindTexture(GL_TEXTURE_2D, textures[2]);
+    glViewport(2 * wWidth / 3, 0, wWidth / 3, wHeight);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)(0 * sizeof(unsigned int)));
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    glUseProgram(0);
+    glBindVertexArray(0);
+    glViewport(0, 0, wWidth, wHeight);
 }

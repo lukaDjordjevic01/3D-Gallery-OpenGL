@@ -26,5 +26,7 @@
     <None Include="wallTexture.vert" />
     <None Include="frameImageTexture.vert" />
     <None Include="frameImageTexture.frag" />
+    <None Include="circle.vert" />
+    <None Include="circle.frag" />
   </ItemGroup>
 </Project>
