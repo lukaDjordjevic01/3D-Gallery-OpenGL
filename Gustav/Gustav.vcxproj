@@ -132,6 +132,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="basic.vert" />
+    <None Include="frameImageTexture.frag" />
+    <None Include="frameImageTexture.vert" />
     <None Include="packages.config" />
     <None Include="wallTexture.frag" />
     <None Include="wallTexture.vert" />

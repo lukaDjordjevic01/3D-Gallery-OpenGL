@@ -24,5 +24,7 @@
     <None Include="basic.vert" />
     <None Include="wallTexture.frag" />
     <None Include="wallTexture.vert" />
+    <None Include="frameImageTexture.vert" />
+    <None Include="frameImageTexture.frag" />
   </ItemGroup>
 </Project>

@@ -15,13 +15,16 @@ static unsigned loadImageToTexture(const char* filePath);
 void drawBackgroundTexture(unsigned int shader, unsigned int VAO, unsigned int texture);
 void drawFrames(unsigned int VAO, unsigned int wWidth, unsigned int wHeight, int polygonMode);
 
-const int NUMBER_OF_BUFFERS = 2;
+const int NUMBER_OF_BUFFERS = 3;
 
 const int wallTextureIndex = 0;
 const int frameShapeIndex = 1;
+const int frameImageTextureIndex = 2;
+
 
 int main()
 {
+    #pragma region Setup
     if (!glfwInit()) // !0 == 1  | glfwInit inicijalizuje GLFW i vrati 1 ako je inicijalizovana uspjesno, a 0 ako nije
     {
         std::cout << "GLFW Biblioteka se nije ucitala! :(\n";
@@ -32,7 +35,7 @@ int main()
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     GLFWwindow* window;
-    unsigned int wWidth = 1200;
+    unsigned int wWidth = 1500;
     unsigned int wHeight = 700;
     const char wTitle[] = "[Generic Title]";
     window = glfwCreateWindow(wWidth, wHeight, wTitle, NULL, NULL);
@@ -54,6 +57,7 @@ int main()
     glGenBuffers(NUMBER_OF_BUFFERS, VBO);
     unsigned int EBO[NUMBER_OF_BUFFERS];
     glGenBuffers(NUMBER_OF_BUFFERS, EBO);
+    #pragma endregion
 
     #pragma region WallTexture
     float wallVertices[] =
@@ -98,8 +102,11 @@ int main()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glBindTexture(GL_TEXTURE_2D, 0);
 
+    glUseProgram(wallTextureShader);
     unsigned uTexLoc = glGetUniformLocation(wallTextureShader, "uTex");
-    glUniform1i(uTexLoc, 0); // Indeks teksturne jedinice (sa koje teksture ce se citati boje)
+    std::cout << uTexLoc << "\n";
+    glUniform1i(uTexLoc, 0);
+    glUseProgram(0);
 
     #pragma endregion
 
@@ -152,6 +159,76 @@ int main()
     glBindVertexArray(0);
     #pragma endregion
 
+    #pragma region GustavImages
+
+    float imageVertices[] =
+    {
+        -0.4, 0.5,   0.0, 1.0,
+        -0.4, -0.5,  0.0, 0.0,
+        0.4, 0.5,    1.0, 1.0,
+        0.4, -0.5,   1.0, 0.0 
+    };
+
+    unsigned int imageIndecies[] =
+    {
+        0, 1, 2,
+        3, 1, 2
+    };
+
+    unsigned int frameImageTextureStride = (2 + 2) * sizeof(float);
+
+    glBindVertexArray(VAO[frameImageTextureIndex]);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO[frameImageTextureIndex]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(imageVertices), imageVertices, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, frameImageTextureStride, (void*)0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, frameImageTextureStride, (void*)(2 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[frameImageTextureIndex]);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(imageIndecies), imageIndecies, GL_STATIC_DRAW);
+
+    glBindVertexArray(0);
+
+    unsigned int frameImageTextureShader = createShader("frameImageTexture.vert", "frameImageTexture.frag");
+    unsigned firstImageTexture = loadImageToTexture("res/gustav_image1.jpg");
+    unsigned secondImageTexture = loadImageToTexture("res/gustav_image2.jpg");
+    unsigned thirdImageTexture = loadImageToTexture("res/gustav_image3.jpg");
+
+    glBindTexture(GL_TEXTURE_2D, firstImageTexture);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    glBindTexture(GL_TEXTURE_2D, secondImageTexture);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    glBindTexture(GL_TEXTURE_2D, thirdImageTexture);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    glUseProgram(frameImageTextureShader);
+    unsigned imageTexLoc = glGetUniformLocation(frameImageTextureShader, "imageTex");
+    std::cout << imageTexLoc << "\n";
+    glUniform1i(imageTexLoc, 1);
+    glUseProgram(0);
+
+    #pragma endregion
+
     int polygonMode = GL_FILL;
 
     while (!glfwWindowShouldClose(window)) 
@@ -166,6 +243,32 @@ int main()
         drawBackgroundTexture(wallTextureShader, VAO[wallTextureIndex], wallTexture);
 
         drawFrames(VAO[frameShapeIndex], wWidth, wHeight, polygonMode);
+
+        #pragma region ImagesDrawing
+        glUseProgram(frameImageTextureShader);
+        glBindVertexArray(VAO[frameImageTextureIndex]);
+        glActiveTexture(GL_TEXTURE1);
+
+        glBindTexture(GL_TEXTURE_2D, firstImageTexture);
+        glViewport(0, 0, wWidth / 3, wHeight);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)(0 * sizeof(unsigned int)));
+        glBindTexture(GL_TEXTURE_2D, 0);
+
+        glBindTexture(GL_TEXTURE_2D, secondImageTexture);
+        glViewport(wWidth / 3, 0, wWidth / 3, wHeight);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)(0 * sizeof(unsigned int)));
+        glBindTexture(GL_TEXTURE_2D, 0);
+
+        glBindTexture(GL_TEXTURE_2D, thirdImageTexture);
+        glViewport(2 * wWidth / 3, 0, wWidth / 3, wHeight);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)(0 * sizeof(unsigned int)));
+        glBindTexture(GL_TEXTURE_2D, 0);
+        
+        glUseProgram(0);
+        glBindVertexArray(0);
+        glViewport(0, 0, wWidth, wHeight);
+        #pragma endregion
+
 
         glfwSwapBuffers(window);
         glfwPollEvents();
