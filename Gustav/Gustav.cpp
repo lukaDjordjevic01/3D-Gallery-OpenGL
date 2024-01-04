@@ -5,6 +5,7 @@
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include "shader.hpp"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -12,9 +13,9 @@
 unsigned int compileShader(GLenum type, const char* source);
 unsigned int createShader(const char* vsSource, const char* fsSource);
 static unsigned loadImageToTexture(const char* filePath);
-void drawBackgroundOrInfoTexture(unsigned int shader, unsigned int VAO, unsigned int texture);
+void drawBackgroundOrInfoTexture(Shader shader, unsigned int VAO, unsigned int texture);
 void drawFrames(unsigned int VAO, unsigned int wWidth, unsigned int wHeight, int polygonMode);
-void drawImages(unsigned int VAO, unsigned int wWidth, unsigned int wHeight, unsigned int shader, unsigned int textures[]);
+void drawImages(unsigned int VAO, unsigned int wWidth, unsigned int wHeight, Shader shader, unsigned int textures[]);
 
 const int NUMBER_OF_BUFFERS = 5;
 const int CIRCLE_POINTS = 30;
@@ -95,7 +96,7 @@ int main()
 
     glBindVertexArray(0);
 
-    unsigned int wallTextureShader = createShader("wallTexture.vert", "wallTexture.frag");
+    Shader wallTextureShader("wallTexture.vert", "wallTexture.frag");
     unsigned wallTexture = loadImageToTexture("res/wall.jpg");
 
     glBindTexture(GL_TEXTURE_2D, wallTexture); 
@@ -106,10 +107,11 @@ int main()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    glUseProgram(wallTextureShader);
-    unsigned uTexLoc = glGetUniformLocation(wallTextureShader, "uTex");
+    wallTextureShader.use();
+    wallTextureShader.setUniform1i("uTex", 0);
+    /*unsigned uTexLoc = glGetUniformLocation(wallTextureShader, "uTex");
     std::cout << uTexLoc << "\n";
-    glUniform1i(uTexLoc, 0);
+    glUniform1i(uTexLoc, 0);*/
     glUseProgram(0);
 
     #pragma endregion
@@ -196,7 +198,7 @@ int main()
 
     glBindVertexArray(0);
 
-    unsigned int frameImageTextureShader = createShader("frameImageTexture.vert", "frameImageTexture.frag");
+    Shader frameImageTextureShader ("frameImageTexture.vert", "frameImageTexture.frag");
     unsigned firstImageTexture = loadImageToTexture("res/gustav_image1.jpg");
     unsigned secondImageTexture = loadImageToTexture("res/gustav_image2.jpg");
     unsigned thirdImageTexture = loadImageToTexture("res/gustav_image3.jpg");
@@ -225,10 +227,8 @@ int main()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    glUseProgram(frameImageTextureShader);
-    unsigned imageTexLoc = glGetUniformLocation(frameImageTextureShader, "imageTex");
-    std::cout << imageTexLoc << "\n";
-    glUniform1i(imageTexLoc, 1);
+    frameImageTextureShader.use();
+    frameImageTextureShader.setUniform1i("imageTex", 1);
     glUseProgram(0);
 
     #pragma endregion
@@ -316,21 +316,21 @@ int main()
         if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
         {
             polygonMode = GL_POINT;
-            glUseProgram(frameImageTextureShader);
-            glUniform1i(glGetUniformLocation(frameImageTextureShader, "flipHorizontal"), 1);
+            frameImageTextureShader.use();
+            frameImageTextureShader.setUniform1i("flipHorizontal", 1);
         }
         if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS)
         {
             polygonMode = GL_LINE;
-            glUseProgram(frameImageTextureShader);
-            glUniform1i(glGetUniformLocation(frameImageTextureShader, "flipVertical"), 1);
+            frameImageTextureShader.use();
+            frameImageTextureShader.setUniform1i("flipVertical", 1);
         }
         if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS)
         {
             polygonMode = GL_FILL;
-            glUseProgram(frameImageTextureShader);
-            glUniform1i(glGetUniformLocation(frameImageTextureShader, "flipHorizontal"), 0);
-            glUniform1i(glGetUniformLocation(frameImageTextureShader, "flipVertical"), 0);
+            frameImageTextureShader.use();
+            frameImageTextureShader.setUniform1i("flipHorizontal", 0);
+            frameImageTextureShader.setUniform1i("flipVertical", 0);
         }
         if (glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS)
         {
@@ -525,11 +525,11 @@ static unsigned loadImageToTexture(const char* filePath) {
     }
 }
 
-void drawBackgroundOrInfoTexture(unsigned int shader, unsigned int VAO, unsigned int texture)
+void drawBackgroundOrInfoTexture(Shader shader, unsigned int VAO, unsigned int texture)
 {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glUseProgram(shader);
+    shader.use();
     glBindVertexArray(VAO);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture);
@@ -563,9 +563,9 @@ void drawFrames(unsigned int VAO, unsigned int wWidth, unsigned int wHeight, int
     glLineWidth(1.0f);
     glPointSize(1.0f);
 }
-void drawImages(unsigned int VAO, unsigned int wWidth, unsigned int wHeight, unsigned int shader, unsigned int textures[])
+void drawImages(unsigned int VAO, unsigned int wWidth, unsigned int wHeight, Shader shader, unsigned int textures[])
 {
-    glUseProgram(shader);
+    shader.use();
     glBindVertexArray(VAO);
     glActiveTexture(GL_TEXTURE1);
 
