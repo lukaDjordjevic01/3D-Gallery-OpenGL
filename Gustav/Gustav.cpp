@@ -6,6 +6,11 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include "shader.hpp"
+#include "camera.hpp"
+
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -16,6 +21,8 @@ static unsigned loadImageToTexture(const char* filePath);
 void drawBackgroundOrInfoTexture(Shader shader, unsigned int VAO, unsigned int texture);
 void drawFrames(unsigned int VAO, unsigned int wWidth, unsigned int wHeight, int polygonMode);
 void drawImages(unsigned int VAO, unsigned int wWidth, unsigned int wHeight, Shader shader, unsigned int textures[]);
+void rotateCamera(GLFWwindow* window, double xposIn, double yposIn);
+void zoomCamera(GLFWwindow* window, double xoffset, double yoffset);
 
 const int NUMBER_OF_BUFFERS = 5;
 const int CIRCLE_POINTS = 30;
@@ -26,9 +33,29 @@ const int frameImageTextureIndex = 2;
 const int personalInfoTextureIndex = 3;
 const int circleIndex = 4;
 
+unsigned int wWidth = 1500;
+unsigned int wHeight = 700;
+
+
+glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 2.0f);
+glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+glm::vec3 cameraRight = glm::normalize(glm::cross(cameraFront, cameraUp));
+//za kretanje kamere
+float deltaTime = 0.0f;
+float lastFrame = 0.0f;
+
+//za rotaciju kamere
+float lastX = wWidth / 2.0f;
+float lastY = wHeight / 2.0f;
+
+bool firstMouse = true;
+Camera camera(cameraPos);
+
 
 int main()
 {
+    camera.MovementSpeed = 1.0f;
     #pragma region Setup
     if (!glfwInit()) // !0 == 1  | glfwInit inicijalizuje GLFW i vrati 1 ako je inicijalizovana uspjesno, a 0 ako nije
     {
@@ -40,8 +67,6 @@ int main()
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     GLFWwindow* window;
-    unsigned int wWidth = 1500;
-    unsigned int wHeight = 700;
     const char wTitle[] = "[Generic Title]";
     window = glfwCreateWindow(wWidth, wHeight, wTitle, NULL, NULL);
     if (window == NULL) //Ako prozor nije napravljen
@@ -62,6 +87,10 @@ int main()
     glGenBuffers(NUMBER_OF_BUFFERS, VBO);
     unsigned int EBO[NUMBER_OF_BUFFERS];
     glGenBuffers(NUMBER_OF_BUFFERS, EBO);
+
+    glfwSetCursorPosCallback(window, rotateCamera);
+    glfwSetScrollCallback(window, zoomCamera);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     #pragma endregion
 
     #pragma region WallTexture
@@ -306,8 +335,84 @@ int main()
     float boundryY = 0.4;
     bool shouldDrawCircle = false;
 
+    
+    Shader shader3D("basic3D.vert", "wallTexture.frag");
+    glm::mat4 model = glm::mat4(1.0f); //Matrica transformacija - mat4(1.0f) generise jedinicnu matricu
+
+    
+    glm::mat4 view; //Matrica pogleda (kamere)
+    view = camera.GetViewMatrix(); // lookAt(Gdje je kamera, u sta kamera gleda, jedinicni vektor pozitivne Y ose svijeta  - ovo rotira kameru)
+
+    glm::mat4 projectionP = glm::perspective(camera.Zoom, (float)wWidth / (float)wHeight, 0.1f, 100.0f); //Matrica perspektivne projekcije (FOV, Aspect Ratio, prednja ravan, zadnja ravan)
+
+    shader3D.use();
+    shader3D.setMat4("uP", projectionP);
+    shader3D.setMat4("uM", model);
+    shader3D.setMat4("uV", view);
+
+    #pragma region 3DWalls
+    float wall3DVertices[] =
+    {
+        //X     Y      Z       NX    NY     NZ
+    -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,   0.0, 0.0,
+     0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,   1.0, 0.0,
+     0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,   1.0, 1.0,
+     0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,   1.0, 1.0,
+    -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,   0.0, 1.0,
+    -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,   0.0, 0.0,
+
+    -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,    0.0, 0.0,
+     0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,    1.0, 0.0,
+     0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,    1.0, 1.0,
+     0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,    1.0, 1.0,
+    -0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,    0.0, 1.0,
+    -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,    0.0, 0.0,
+
+    -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,   0.0, 1.0,
+    -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,   1.0, 1.0,
+    -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,   1.0, 0.0,
+    -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,   1.0, 0.0,
+    -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,   0.0, 0.0,
+    -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,   0.0, 1.0,
+
+    0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,    1.0, 1.0,
+     0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,   0.0, 1.0,
+     0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,   0.0, 0.0,
+     0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,   0.0, 0.0,
+     0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,   1.0, 0.0,
+     0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,   1.0, 1.0
+    };
+
+    unsigned int strideWall3D = (3 + 3 + 2) * sizeof(float);
+    unsigned int VAO3D;
+    glGenVertexArrays(1, &VAO3D);
+    glBindVertexArray(VAO3D);
+
+    unsigned int VBO3D;
+    glGenBuffers(1, &VBO3D);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO3D);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(wall3DVertices), wall3DVertices, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, strideWall3D, (void*)0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, strideWall3D, (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, strideWall3D, (void*)(6 * sizeof(float)));
+    glEnableVertexAttribArray(2);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+    #pragma endregion
+
+   
+    glEnable(GL_DEPTH_TEST);
     while (!glfwWindowShouldClose(window)) 
     {
+
+        float currentFrame = static_cast<float>(glfwGetTime());
+        deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;
+
         #pragma region KeyHandle
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         {
@@ -344,28 +449,37 @@ int main()
         }
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         {
+            camera.ProcessKeyboard(FORWARD, deltaTime);
             if (shouldDrawCircle && circleY <= boundryY)
                 circleY += 0.01;
         }
         if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
         {
+            camera.ProcessKeyboard(BACKWARD, deltaTime);
+            glUseProgram(0);
             if (shouldDrawCircle && circleY > -boundryY)
                 circleY -= 0.01;
         }
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         {
+            camera.ProcessKeyboard(RIGHT, deltaTime);
             if (shouldDrawCircle && circleX <= boundryX)
                 circleX += 0.01;
         }
         if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
         {
+            camera.ProcessKeyboard(LEFT, deltaTime);
             if (shouldDrawCircle && circleX >= -boundryX)
                 circleX -= 0.01;
         }
         #pragma endregion
-
-        glClear(GL_COLOR_BUFFER_BIT);
-        glViewport(0, 0, wWidth, wHeight);
+        projectionP = glm::perspective(camera.Zoom, (float)wWidth / (float)wHeight, 0.1f, 100.0f);
+        shader3D.use();
+        shader3D.setMat4("uV", camera.GetViewMatrix());
+        shader3D.setMat4("uP", projectionP);
+        glClearColor(0.5, 0.5, 0.5, 1.0);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        /*glViewport(0, 0, wWidth, wHeight);
         drawBackgroundOrInfoTexture(wallTextureShader, VAO[wallTextureIndex], wallTexture);
 
         #pragma region FramesDrawing
@@ -407,7 +521,19 @@ int main()
             glBindVertexArray(0);
             glViewport(0, 0, wWidth, wHeight);
         }
-        #pragma endregion
+        #pragma endregion*/
+
+        shader3D.use();
+        glBindVertexArray(VAO3D);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, wallTexture);
+
+        glDrawArrays(GL_TRIANGLES, 0, 24);
+
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glDisable(GL_BLEND);
+        glUseProgram(0);
+        glBindVertexArray(0);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -587,4 +713,31 @@ void drawImages(unsigned int VAO, unsigned int wWidth, unsigned int wHeight, Sha
     glUseProgram(0);
     glBindVertexArray(0);
     glViewport(0, 0, wWidth, wHeight);
+}
+
+
+void rotateCamera(GLFWwindow* window, double xposIn, double yposIn)
+{
+    float xpos = static_cast<float>(xposIn);
+    float ypos = static_cast<float>(yposIn);
+
+    if (firstMouse)
+    {
+        lastX = xpos;
+        lastY = ypos;
+        firstMouse = false;
+    }
+
+    float xoffset = xpos - lastX;
+    float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
+
+    lastX = xpos;
+    lastY = ypos;
+
+    camera.ProcessMouseMovement(xoffset, yoffset);
+}
+void zoomCamera(GLFWwindow* window, double xoffset, double yoffset)
+{
+    float realOffset = (yoffset / abs(yoffset)) * 0.1;
+    camera.ProcessMouseScroll(realOffset);
 }
