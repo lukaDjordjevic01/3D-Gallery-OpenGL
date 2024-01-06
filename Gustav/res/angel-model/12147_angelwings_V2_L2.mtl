@@ -1,0 +1,98 @@
+# 3ds Max Wavefront OBJ Exporter v0.97b - (c)2007 guruware
+# File Created: 08.12.2011 13:22:16
+
+newmtl 12147_angelwings_cloth
+	Ns 22.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 1.0000 1.0000 1.0000
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.0900 0.0900 0.0900
+	Ke 0.0000 0.0000 0.0000
+	map_Ka 12147_angelwings_cloth_diffuse.jpg
+	map_Kd 12147_angelwings_cloth_diffuse.jpg
+
+newmtl 12147_angelwings_foot
+	Ns 18.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 1.0000 1.0000 1.0000
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.1400 0.1400 0.1400
+	Ke 0.0000 0.0000 0.0000
+	map_Ka 12147_angelwings_foot_diffuse.jpg
+	map_Kd 12147_angelwings_foot_diffuse.jpg
+
+newmtl 12147_angelwings_wings
+	Ns 10.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 1.0000 1.0000 1.0000
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.0900 0.0900 0.0900
+	Ke 0.0000 0.0000 0.0000
+	map_Ka 12147_angelwings_wings_diffuse.jpg
+	map_Kd 12147_angelwings_wings_diffuse.jpg
+
+newmtl 12147_angelwings_hands
+	Ns 10.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 1.0000 1.0000 1.0000
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.0900 0.0900 0.0900
+	Ke 0.0000 0.0000 0.0000
+	map_Kd 12147_angelwings_hand_diffuse.jpg
+
+newmtl 12147_angelwings_face
+	Ns 10.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 0.4000 0.1882 0.0745
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.0900 0.0900 0.0900
+	Ke 0.0000 0.0000 0.0000
+	map_Kd 12147_angelwings_face_diffuse.jpg
+
+newmtl 12147_angelwings_eyes
+	Ns 53.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 1.0000 1.0000 1.0000
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.2700 0.2700 0.2700
+	Ke 0.0000 0.0000 0.0000
+	map_Ka 12147_angelwings_eyes_diffuse.jpg
+	map_Kd 12147_angelwings_eyes_diffuse.jpg
+
+newmtl 12147_angelwings_hairs
+	Ns 39.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 1.0000 1.0000 1.0000
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.2070 0.2070 0.2070
+	Ke 0.0000 0.0000 0.0000
+	map_Ka 12147_angelwings_hairs_diffuse.jpg
+	map_Kd 12147_angelwings_hairs_diffuse.jpg
