@@ -34,6 +34,7 @@ public:
     vector<Mesh>    meshes;
     string directory;
     bool gammaCorrection;
+    glm::vec3 center;
 
     // constructor, expects a filepath to a 3D model.
     Model(string const& path, bool gamma = false) : gammaCorrection(gamma)
@@ -71,14 +72,18 @@ private:
     // processes a node in a recursive fashion. Processes each individual mesh located at the node and repeats this process on its children nodes (if any).
     void processNode(aiNode* node, const aiScene* scene)
     {
+        glm::vec3 minVertex(FLT_MAX, FLT_MAX, FLT_MAX);
+        glm::vec3 maxVertex(-FLT_MAX, -FLT_MAX, -FLT_MAX);
         // process each mesh located at the current node
         for (unsigned int i = 0; i < node->mNumMeshes; i++)
         {
             // the node object only contains indices to index the actual objects in the scene. 
             // the scene contains all the data, node is just to keep stuff organized (like relations between nodes).
             aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-            meshes.push_back(processMesh(mesh, scene));
+
+            meshes.push_back(processMesh(mesh, scene, minVertex, maxVertex));
         }
+        center = (minVertex + maxVertex) * 0.5f;
         // after we've processed all of the meshes (if any) we then recursively process each of the children nodes
         for (unsigned int i = 0; i < node->mNumChildren; i++)
         {
@@ -87,7 +92,7 @@ private:
 
     }
 
-    Mesh processMesh(aiMesh* mesh, const aiScene* scene)
+    Mesh processMesh(aiMesh* mesh, const aiScene* scene, glm::vec3 &minVertex, glm::vec3 &maxVertex)
     {
         // data to fill
         vector<Vertex> vertices;
@@ -124,6 +129,13 @@ private:
             }
             else
                 vertex.TexCoords = glm::vec2(0.0f, 0.0f);
+
+            minVertex.x = std::min(minVertex.x, vertex.Position.x);
+            minVertex.y = std::min(minVertex.y, vertex.Position.y);
+            minVertex.z = std::min(minVertex.z, vertex.Position.z);
+            maxVertex.x = std::max(maxVertex.x, vertex.Position.x);
+            maxVertex.y = std::max(maxVertex.y, vertex.Position.y);
+            maxVertex.z = std::max(maxVertex.z, vertex.Position.z);
 
             vertices.push_back(vertex);
         }

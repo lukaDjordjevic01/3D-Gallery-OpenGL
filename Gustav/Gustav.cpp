@@ -31,8 +31,8 @@ const int frameImageTextureIndex = 2;
 const int personalInfoTextureIndex = 3;
 const int circleIndex = 4;
 
-unsigned int wWidth = 1500;
-unsigned int wHeight = 700;
+unsigned int wWidth = 1600;
+unsigned int wHeight = 1000;
 
 
 glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 2.0f);
@@ -100,6 +100,8 @@ int main()
 
     Shader wallTextureShader("wallTexture.vert", "wallTexture.frag");
     unsigned wallTexture = loadImageToTexture("res/wall.jpg");
+    unsigned wallWoodTexture = loadImageToTexture("res/wallWood.jpg");
+    unsigned floorTexture = loadImageToTexture("res/floor.jpg");
 
     glBindTexture(GL_TEXTURE_2D, wallTexture);
     glGenerateMipmap(GL_TEXTURE_2D);
@@ -108,50 +110,68 @@ int main()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glBindTexture(GL_TEXTURE_2D, 0);
+
+    glBindTexture(GL_TEXTURE_2D, wallWoodTexture);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    glBindTexture(GL_TEXTURE_2D, floorTexture);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glBindTexture(GL_TEXTURE_2D, 0);
     
     Shader shader3D("basic3D.vert", "wallTexture.frag");
-    glm::mat4 model = glm::mat4(1.0f); //Matrica transformacija - mat4(1.0f) generise jedinicnu matricu
+    glm::mat4 modelRoom1 = glm::mat4(1.0f);
+    glm::mat4 modelRoom2 = glm::mat4(1.0f);//Matrica transformacija - mat4(1.0f) generise jedinicnu matricu
 
     glm::mat4 projectionP = glm::perspective(camera.Zoom, (float)wWidth / (float)wHeight, 0.1f, 100.0f); //Matrica perspektivne projekcije (FOV, Aspect Ratio, prednja ravan, zadnja ravan)
 
     shader3D.use();
     shader3D.setMat4("uP", projectionP);
-    shader3D.setMat4("uM", model);
+    modelRoom1 = glm::translate(modelRoom1, glm::vec3(-1.0, 0.0, 0.0));
+    modelRoom2 = glm::translate(modelRoom2, glm::vec3(1.0, 0.0, 0.0));
     shader3D.setMat4("uV", camera.GetViewMatrix());
 
     
 
-    #pragma region 3DWalls
+    #pragma region RoomVertices
     float wall3DVertices[] =
     {
         //X     Y      Z       NX    NY     NZ
     -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,   0.0, 0.0,
-     0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,   1.0, 0.0,
-     0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,   1.0, 1.0,
-     0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,   1.0, 1.0,
-    -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,   0.0, 1.0,
+     0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,   3.0, 0.0,
+     0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,   3.0, 3.0,
+     0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,   3.0, 3.0,
+    -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,   0.0, 3.0,
     -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,   0.0, 0.0,
 
     -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,    0.0, 0.0,
-     0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,    1.0, 0.0,
-     0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,    1.0, 1.0,
-     0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,    1.0, 1.0,
-    -0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,    0.0, 1.0,
+     0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,    3.0, 0.0,
+     0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,    3.0, 3.0,
+     0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,    3.0, 3.0,
+    -0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,    0.0, 3.0,
     -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,    0.0, 0.0,
 
-    -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,   0.0, 1.0,
-    -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,   1.0, 1.0,
-    -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,   1.0, 0.0,
-    -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,   1.0, 0.0,
+    -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,   0.0, 3.0,
+    -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,   3.0, 3.0,
+    -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,   3.0, 0.0,
+    -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,   3.0, 0.0,
     -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,   0.0, 0.0,
-    -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,   0.0, 1.0,
+    -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,   0.0, 3.0,
 
-    0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,    1.0, 1.0,
-     0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,   0.0, 1.0,
+    0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,    3.0, 3.0,
+     0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,   0.0, 3.0,
      0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,   0.0, 0.0,
      0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,   0.0, 0.0,
-     0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,   1.0, 0.0,
-     0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,   1.0, 1.0
+     0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,   3.0, 0.0,
+     0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,   3.0, 3.0
     };
 
     unsigned int strideWall3D = (3 + 3 + 2) * sizeof(float);
@@ -175,20 +195,61 @@ int main()
     glBindVertexArray(0);
     #pragma endregion
 
+    #pragma region Floors
+    float floorVertices[] =
+    {
+        //X     Y      Z       NX    NY     NZ
+      -0.5f, -0.5f, -0.5f,  0.0f,  1.0f, 0.0f,   0.0, 3.0,
+       -0.5f, -0.5f, 0.5f,  0.0f,  1.0f, 0.0f,   0.0, 0.0,
+       0.5f,  -0.5f, 0.5f,  0.0f,  1.0f, 0.0f,   3.0, 0.0,
+       0.5f,  -0.5f, 0.5f,  0.0f,  1.0f, 0.0f,   3.0, 0.0,
+      0.5f,  -0.5f, -0.5f,  0.0f,  1.0f, 0.0f,   3.0, 3.0,
+      -0.5f, -0.5f, -0.5f,  0.0f,  1.0f, 0.0f,   0.0, 3.0,
+    };
+
+    unsigned int strideFloor = (3 + 3 + 2) * sizeof(float);
+    unsigned int VAOFLOOR;
+    glGenVertexArrays(1, &VAOFLOOR);
+    glBindVertexArray(VAOFLOOR);
+
+    unsigned int VBOFLOOR;
+    glGenBuffers(1, &VBOFLOOR);
+    glBindBuffer(GL_ARRAY_BUFFER, VBOFLOOR);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(floorVertices), floorVertices, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, strideFloor, (void*)0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, strideFloor, (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, strideFloor, (void*)(6 * sizeof(float)));
+    glEnableVertexAttribArray(2);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+
+
+    #pragma endregion
 
     #pragma region AngelModel
     Model angel("res/angel-model/12147_angelwings_V2_L2.obj");
     Shader modelShader("model-shader/model.vert", "model-shader/model.frag");
     glm::mat4 model2 = glm::mat4(1.0f);
-    model2 = glm::scale(model2, glm::vec3(0.01, 0.01, 0.01));
-    //model2 = glm::rotate(model2, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    float modelScalingFactor = 220;
+    cout << angel.center.x << angel.center.y << angel.center.z << endl;
+    angel.center /= modelScalingFactor;
+    model2 = glm::scale(model2, glm::vec3(1.0/modelScalingFactor, 1.0 / modelScalingFactor, 1.0 / modelScalingFactor));
+    model2 = glm::translate(model2, glm::vec3(1.0, -0.2, 0.0) * modelScalingFactor);
+    angel.center += glm::vec3(1.0, -0.2, 0.0);
+    cout << angel.center.x << angel.center.y << angel.center.z << endl;
     modelShader.use();
     modelShader.setMat4("uP", projectionP);
     modelShader.setMat4("uM", model2);
     modelShader.setMat4("uV", camera.GetViewMatrix());
+    glUseProgram(0);
     #pragma endregion
    
     glEnable(GL_DEPTH_TEST);
+    glCullFace(GL_BACK);
     while (!glfwWindowShouldClose(window)) 
     {
 
@@ -219,7 +280,7 @@ int main()
         }
         if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
         {
-            model2 = glm::rotate(model2, glm::radians(-1.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+            model2 = glm::rotate(model2, glm::radians(-1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
         }
         #pragma endregion
         projectionP = glm::perspective(camera.Zoom, (float)wWidth / (float)wHeight, 0.1f, 100.0f);
@@ -238,6 +299,7 @@ int main()
 
         #pragma region GoldenRoom
         shader3D.use();
+        shader3D.setMat4("uM", modelRoom1);
         glBindVertexArray(VAO3D);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, wallTexture);
@@ -250,6 +312,64 @@ int main()
         glBindVertexArray(0);
         #pragma endregion
 
+        #pragma region WoodenRoom
+        shader3D.use();
+        shader3D.setMat4("uM", modelRoom2);
+        glBindVertexArray(VAO3D);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, wallWoodTexture);
+
+        glDrawArrays(GL_TRIANGLES, 0, 24);
+
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glDisable(GL_BLEND);
+        glUseProgram(0);
+        glBindVertexArray(0);
+        #pragma endregion
+
+        #pragma region FloorInGolden
+        shader3D.use();
+        shader3D.setMat4("uM", modelRoom1);
+        glBindVertexArray(VAOFLOOR);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, floorTexture);
+
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glDisable(GL_BLEND);
+        glUseProgram(0);
+        glBindVertexArray(0);
+        #pragma endregion 
+
+        #pragma region FloorInWooden
+        shader3D.use();
+        shader3D.setMat4("uM", modelRoom2);
+        glBindVertexArray(VAOFLOOR);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, floorTexture);
+
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glDisable(GL_BLEND);
+        glUseProgram(0);
+        glBindVertexArray(0);
+        #pragma endregion 
+
+
+        glm::vec3 toModelVector = angel.center - camera.Position;
+        const float rotationThreshold = glm::radians(30.0f);
+
+
+        float angle = glm::acos(glm::dot(glm::normalize(toModelVector), camera.Front));
+
+        glm::vec3 crossResult = glm::cross(glm::normalize(toModelVector), camera.Front);
+        float sign = glm::dot(crossResult, glm::vec3(0.0f, 1.0f, 0.0f)) < 0.0f ? -1.0f : 1.0f;
+
+        if (glm::abs(angle) < rotationThreshold) {
+            model2 = glm::rotate(model2, glm::radians(-0.2f), glm::vec3(0.0f, 1.0f, 0.0f));
+        }
 
         modelShader.use();
         angel.Draw(modelShader);
