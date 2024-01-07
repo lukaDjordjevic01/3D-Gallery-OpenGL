@@ -32,11 +32,11 @@ const int personalInfoTextureIndex = 3;
 const int circleIndex = 4;
 
 unsigned int wWidth = 1600;
-unsigned int wHeight = 1000;
+unsigned int wHeight = 800;
 
 
-glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 2.0f);
-glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+glm::vec3 cameraPos = glm::vec3(-1.0f, -0.2f, 0.0f);
+glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, 0.0f);
 glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 glm::vec3 cameraRight = glm::normalize(glm::cross(cameraFront, cameraUp));
 //za kretanje kamere
@@ -48,11 +48,12 @@ float lastX = wWidth / 2.0f;
 float lastY = wHeight / 2.0f;
 
 bool firstMouse = true;
-Camera camera(cameraPos);
+Camera camera(cameraPos, cameraUp, cameraFront, 0.0);
 
 
 int main()
 {
+    cout << camera.Position.x << camera.Position.y << camera.Position.z << endl;
     camera.MovementSpeed = 1.0f;
     #pragma region Setup
     if (!glfwInit()) // !0 == 1  | glfwInit inicijalizuje GLFW i vrati 1 ako je inicijalizovana uspjesno, a 0 ako nije
@@ -129,14 +130,17 @@ int main()
     
     Shader shader3D("basic3D.vert", "wallTexture.frag");
     glm::mat4 modelRoom1 = glm::mat4(1.0f);
-    glm::mat4 modelRoom2 = glm::mat4(1.0f);//Matrica transformacija - mat4(1.0f) generise jedinicnu matricu
+    glm::mat4 modelRoom2 = glm::mat4(1.0f);
+    glm::mat4 modelHallway = glm::mat4(1.0f);
 
     glm::mat4 projectionP = glm::perspective(camera.Zoom, (float)wWidth / (float)wHeight, 0.1f, 100.0f); //Matrica perspektivne projekcije (FOV, Aspect Ratio, prednja ravan, zadnja ravan)
 
     shader3D.use();
     shader3D.setMat4("uP", projectionP);
+    
     modelRoom1 = glm::translate(modelRoom1, glm::vec3(-1.0, 0.0, 0.0));
     modelRoom2 = glm::translate(modelRoom2, glm::vec3(1.0, 0.0, 0.0));
+    modelRoom2 = glm::rotate(modelRoom2, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     shader3D.setMat4("uV", camera.GetViewMatrix());
 
     
@@ -166,12 +170,20 @@ int main()
     -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,   0.0, 0.0,
     -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,   0.0, 3.0,
 
-    0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,    3.0, 3.0,
+    //Ovde su otvori za hodnik
+    0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,    1.0, 3.0,
+     0.5f,  0.5f, 0.2f,  1.0f,  0.0f,  0.0f,   0.0, 3.0,
+     0.5f, -0.5f, 0.2f,  1.0f,  0.0f,  0.0f,   0.0, 0.0,
+     0.5f, -0.5f, 0.2f,  1.0f,  0.0f,  0.0f,   0.0, 0.0,
+     0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,   1.0, 0.0,
+     0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,   1.0, 3.0,
+
+     0.5f,  0.5f, -0.2f,  1.0f,  0.0f,  0.0f,    1.0, 3.0,
      0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,   0.0, 3.0,
      0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,   0.0, 0.0,
      0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,   0.0, 0.0,
-     0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,   3.0, 0.0,
-     0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,   3.0, 3.0
+     0.5f, -0.5f,  -0.2f,  1.0f,  0.0f,  0.0f,   1.0, 0.0,
+     0.5f,  0.5f,  -0.2f,  1.0f,  0.0f,  0.0f,   1.0, 3.0
     };
 
     unsigned int strideWall3D = (3 + 3 + 2) * sizeof(float);
@@ -230,6 +242,80 @@ int main()
 
     #pragma endregion
 
+    #pragma region Hallway
+    float hallwayVertices[] =
+    {
+           //X     Y      Z       NX    NY     NZ
+        -0.5f, -0.5f, -0.2f,  0.0f,  0.0f, -1.0f,   0.0, 0.0,
+         0.5f, -0.5f, -0.2f,  0.0f,  0.0f, -1.0f,   3.0, 0.0,
+         0.5f,  0.5f, -0.2f,  0.0f,  0.0f, -1.0f,   3.0, 3.0,
+         0.5f,  0.5f, -0.2f,  0.0f,  0.0f, -1.0f,   3.0, 3.0,
+        -0.5f,  0.5f, -0.2f,  0.0f,  0.0f, -1.0f,   0.0, 3.0,
+        -0.5f, -0.5f, -0.2f,  0.0f,  0.0f, -1.0f,   0.0, 0.0,
+
+        -0.5f, -0.5f,  0.2f,  0.0f,  0.0f, 1.0f,    0.0, 0.0,
+         0.5f, -0.5f,  0.2f,  0.0f,  0.0f, 1.0f,    3.0, 0.0,
+         0.5f,  0.5f,  0.2f,  0.0f,  0.0f, 1.0f,    3.0, 3.0,
+         0.5f,  0.5f,  0.2f,  0.0f,  0.0f, 1.0f,    3.0, 3.0,
+        -0.5f,  0.5f,  0.2f,  0.0f,  0.0f, 1.0f,    0.0, 3.0,
+        -0.5f, -0.5f,  0.2f,  0.0f,  0.0f, 1.0f,    0.0, 0.0,
+    };
+
+    unsigned int strideHallway = (3 + 3 + 2) * sizeof(float);
+    unsigned int VAOHALLWAY;
+    glGenVertexArrays(1, &VAOHALLWAY);
+    glBindVertexArray(VAOHALLWAY);
+
+    unsigned int VBOHALLWAY;
+    glGenBuffers(1, &VBOHALLWAY);
+    glBindBuffer(GL_ARRAY_BUFFER, VBOHALLWAY);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(hallwayVertices), hallwayVertices, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, strideHallway, (void*)0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, strideHallway, (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, strideHallway, (void*)(6 * sizeof(float)));
+    glEnableVertexAttribArray(2);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+
+    #pragma endregion
+
+    #pragma region HallwayFloor
+    float hallwayFloorVertices[] =
+    {
+        //X     Y      Z       NX    NY     NZ
+      -0.5f, -0.5f, -0.2f,  0.0f,  1.0f, 0.0f,   0.0, 3.0,
+       -0.5f, -0.5f, 0.2f,  0.0f,  1.0f, 0.0f,   0.0, 0.0,
+       0.5f,  -0.5f, 0.2f,  0.0f,  1.0f, 0.0f,   3.0, 0.0,
+       0.5f,  -0.5f, 0.2f,  0.0f,  1.0f, 0.0f,   3.0, 0.0,
+      0.5f,  -0.5f, -0.2f,  0.0f,  1.0f, 0.0f,   3.0, 3.0,
+      -0.5f, -0.5f, -0.2f,  0.0f,  1.0f, 0.0f,   0.0, 3.0,
+    };
+
+    unsigned int strideHallwayFloor = (3 + 3 + 2) * sizeof(float);
+    unsigned int VAOHALLWAYFLOOR;
+    glGenVertexArrays(1, &VAOHALLWAYFLOOR);
+    glBindVertexArray(VAOHALLWAYFLOOR);
+
+    unsigned int VBOHALLWAYFLOOR;
+    glGenBuffers(1, &VBOHALLWAYFLOOR);
+    glBindBuffer(GL_ARRAY_BUFFER, VBOHALLWAYFLOOR);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(hallwayFloorVertices), hallwayFloorVertices, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, strideHallwayFloor, (void*)0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, strideHallwayFloor, (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, strideHallwayFloor, (void*)(6 * sizeof(float)));
+    glEnableVertexAttribArray(2);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+    #pragma endregion
+
     #pragma region AngelModel
     Model angel("res/angel-model/12147_angelwings_V2_L2.obj");
     Shader modelShader("model-shader/model.vert", "model-shader/model.frag");
@@ -238,8 +324,8 @@ int main()
     cout << angel.center.x << angel.center.y << angel.center.z << endl;
     angel.center /= modelScalingFactor;
     model2 = glm::scale(model2, glm::vec3(1.0/modelScalingFactor, 1.0 / modelScalingFactor, 1.0 / modelScalingFactor));
-    model2 = glm::translate(model2, glm::vec3(1.0, -0.2, 0.0) * modelScalingFactor);
-    angel.center += glm::vec3(1.0, -0.2, 0.0);
+    model2 = glm::translate(model2, glm::vec3(1.0, -0.4, 0.0) * modelScalingFactor);
+    angel.center += glm::vec3(1.0, -0.4, 0.0);
     cout << angel.center.x << angel.center.y << angel.center.z << endl;
     modelShader.use();
     modelShader.setMat4("uP", projectionP);
@@ -304,7 +390,7 @@ int main()
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, wallTexture);
 
-        glDrawArrays(GL_TRIANGLES, 0, 24);
+        glDrawArrays(GL_TRIANGLES, 0, 30);
 
         glBindTexture(GL_TEXTURE_2D, 0);
         glDisable(GL_BLEND);
@@ -319,7 +405,7 @@ int main()
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, wallWoodTexture);
 
-        glDrawArrays(GL_TRIANGLES, 0, 24);
+        glDrawArrays(GL_TRIANGLES, 0, 30);
 
         glBindTexture(GL_TEXTURE_2D, 0);
         glDisable(GL_BLEND);
@@ -357,18 +443,45 @@ int main()
         glBindVertexArray(0);
         #pragma endregion 
 
+        #pragma region Hallway
+        shader3D.use();
+        shader3D.setMat4("uM", modelHallway);
+        glBindVertexArray(VAOHALLWAY);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, wallTexture);
+
+        glDrawArrays(GL_TRIANGLES, 0, 12);
+
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glDisable(GL_BLEND);
+        glUseProgram(0);
+        glBindVertexArray(0);
+        #pragma endregion
+
+        #pragma region HallwayFloor
+        shader3D.use();
+        shader3D.setMat4("uM", modelHallway);
+        glBindVertexArray(VAOHALLWAYFLOOR);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, floorTexture);
+
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glDisable(GL_BLEND);
+        glUseProgram(0);
+        glBindVertexArray(0);
+        #pragma endregion
 
         glm::vec3 toModelVector = angel.center - camera.Position;
         const float rotationThreshold = glm::radians(30.0f);
-
-
         float angle = glm::acos(glm::dot(glm::normalize(toModelVector), camera.Front));
 
         glm::vec3 crossResult = glm::cross(glm::normalize(toModelVector), camera.Front);
         float sign = glm::dot(crossResult, glm::vec3(0.0f, 1.0f, 0.0f)) < 0.0f ? -1.0f : 1.0f;
 
         if (glm::abs(angle) < rotationThreshold) {
-            model2 = glm::rotate(model2, glm::radians(-0.2f), glm::vec3(0.0f, 1.0f, 0.0f));
+            model2 = glm::rotate(model2, glm::radians(-0.3f), glm::vec3(0.0f, 1.0f, 0.0f));
         }
 
         modelShader.use();
