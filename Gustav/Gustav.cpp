@@ -864,7 +864,7 @@ int main()
         glm::vec3 crossResult = glm::cross(glm::normalize(toModelVector), camera.Front);
         float sign = glm::dot(crossResult, glm::vec3(0.0f, 1.0f, 0.0f)) < 0.0f ? -1.0f : 1.0f;
 
-        if (glm::abs(angle) < rotationThreshold) {
+        if (glm::abs(angle) >= rotationThreshold) {
             model2 = glm::rotate(model2, glm::radians(-0.3f), glm::vec3(0.0f, 1.0f, 0.0f));
         }
 
