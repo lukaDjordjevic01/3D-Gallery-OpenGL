@@ -109,14 +109,28 @@ int main()
     #pragma region TextureSetup
     Shader wallTextureShader("wallTexture.vert", "wallTexture.frag");
     unsigned wallTexture = loadImageToTexture("res/wall.jpg");
+    unsigned wallTextureSpecular = loadImageToTexture("res/wall-specular.png");
+
     unsigned wallWoodTexture = loadImageToTexture("res/wallWood.jpg");
+    unsigned wallWoodTextureSpecular = loadImageToTexture("res/wallWood-specular.png");
+
     unsigned floorTexture = loadImageToTexture("res/floor.jpg");
+    unsigned floorTextureSpecular = loadImageToTexture("res/floor-specular.png");
 
     unsigned firstImageTexture = loadImageToTexture("res/gustav_image1.jpg");
     unsigned secondImageTexture = loadImageToTexture("res/gustav_image2.jpg");
     unsigned thirdImageTexture = loadImageToTexture("res/gustav_image3.jpg");
+    unsigned imagesTextureSpecular = loadImageToTexture("res/gustav_image-specular.png");
 
     glBindTexture(GL_TEXTURE_2D, wallTexture);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    glBindTexture(GL_TEXTURE_2D, wallTextureSpecular);
     glGenerateMipmap(GL_TEXTURE_2D);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -132,7 +146,23 @@ int main()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glBindTexture(GL_TEXTURE_2D, 0);
 
+    glBindTexture(GL_TEXTURE_2D, wallWoodTextureSpecular);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
     glBindTexture(GL_TEXTURE_2D, floorTexture);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    glBindTexture(GL_TEXTURE_2D, floorTextureSpecular);
     glGenerateMipmap(GL_TEXTURE_2D);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -164,6 +194,14 @@ int main()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glBindTexture(GL_TEXTURE_2D, 0);
 
+    glBindTexture(GL_TEXTURE_2D, imagesTextureSpecular);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
     #pragma endregion
     
     Shader shader3D("basic3D.vert", "wallTexture.frag");
@@ -174,6 +212,8 @@ int main()
     glm::mat4 modelFrame1 = glm::mat4(1.0f);
     glm::mat4 modelFrame2 = glm::mat4(1.0f);
     glm::mat4 modelFrame3 = glm::mat4(1.0f);
+
+    glm::mat4 modelPointLight = glm::mat4(1.0f);
     
     glm::mat4 projectionP = glm::perspective(camera.Zoom, (float)wWidth / (float)wHeight, 0.1f, 100.0f); //Matrica perspektivne projekcije (FOV, Aspect Ratio, prednja ravan, zadnja ravan)
 
@@ -202,41 +242,41 @@ int main()
     float wall3DVertices[] =
     {
         //X             Y                           Z              NX     NY     NZ      TX   TY
-        -boxParameter, -boxParameter,              -boxParameter,  0.0f,  0.0f, -1.0f,   0.0, 0.0,
-         boxParameter, -boxParameter,              -boxParameter,  0.0f,  0.0f, -1.0f,   3.0, 0.0,
-         boxParameter,  boxParameter -ceilingDown, -boxParameter,  0.0f,  0.0f, -1.0f,   3.0, 3.0,
-         boxParameter,  boxParameter -ceilingDown, -boxParameter,  0.0f,  0.0f, -1.0f,   3.0, 3.0,
-        -boxParameter,  boxParameter -ceilingDown, -boxParameter,  0.0f,  0.0f, -1.0f,   0.0, 3.0,
-        -boxParameter, -boxParameter,              -boxParameter,  0.0f,  0.0f, -1.0f,   0.0, 0.0,
+        -boxParameter, -boxParameter,              -boxParameter,  0.0f,  0.0f, 1.0f,   0.0, 0.0,
+         boxParameter, -boxParameter,              -boxParameter,  0.0f,  0.0f, 1.0f,   3.0, 0.0,
+         boxParameter,  boxParameter -ceilingDown, -boxParameter,  0.0f,  0.0f, 1.0f,   3.0, 3.0,
+         boxParameter,  boxParameter -ceilingDown, -boxParameter,  0.0f,  0.0f, 1.0f,   3.0, 3.0,
+        -boxParameter,  boxParameter -ceilingDown, -boxParameter,  0.0f,  0.0f, 1.0f,   0.0, 3.0,
+        -boxParameter, -boxParameter,              -boxParameter,  0.0f,  0.0f, 1.0f,   0.0, 0.0,
 
-        -boxParameter, -boxParameter,               boxParameter,  0.0f,  0.0f, 1.0f,    0.0, 0.0,
-         boxParameter, -boxParameter,               boxParameter,  0.0f,  0.0f, 1.0f,    3.0, 0.0,
-         boxParameter,  boxParameter -ceilingDown,  boxParameter,  0.0f,  0.0f, 1.0f,    3.0, 3.0,
-         boxParameter,  boxParameter -ceilingDown,  boxParameter,  0.0f,  0.0f, 1.0f,    3.0, 3.0,
-        -boxParameter,  boxParameter -ceilingDown,  boxParameter,  0.0f,  0.0f, 1.0f,    0.0, 3.0,
-        -boxParameter, -boxParameter,               boxParameter,  0.0f,  0.0f, 1.0f,    0.0, 0.0,
+        -boxParameter, -boxParameter,               boxParameter,  0.0f,  0.0f, -1.0f,    0.0, 0.0,
+         boxParameter, -boxParameter,               boxParameter,  0.0f,  0.0f, -1.0f,    3.0, 0.0,
+         boxParameter,  boxParameter -ceilingDown,  boxParameter,  0.0f,  0.0f, -1.0f,    3.0, 3.0,
+         boxParameter,  boxParameter -ceilingDown,  boxParameter,  0.0f,  0.0f, -1.0f,    3.0, 3.0,
+        -boxParameter,  boxParameter -ceilingDown,  boxParameter,  0.0f,  0.0f, -1.0f,    0.0, 3.0,
+        -boxParameter, -boxParameter,               boxParameter,  0.0f,  0.0f, -1.0f,    0.0, 0.0,
 
-        -boxParameter,  boxParameter -ceilingDown,  boxParameter, -1.0f,  0.0f,  0.0f,   0.0, 3.0,
-        -boxParameter,  boxParameter -ceilingDown, -boxParameter, -1.0f,  0.0f,  0.0f,   3.0, 3.0,
-        -boxParameter, -boxParameter,              -boxParameter, -1.0f,  0.0f,  0.0f,   3.0, 0.0,
-        -boxParameter, -boxParameter,              -boxParameter, -1.0f,  0.0f,  0.0f,   3.0, 0.0,
-        -boxParameter, -boxParameter,               boxParameter, -1.0f,  0.0f,  0.0f,   0.0, 0.0,
-        -boxParameter,  boxParameter -ceilingDown,  boxParameter, -1.0f,  0.0f,  0.0f,   0.0, 3.0,
+        -boxParameter,  boxParameter -ceilingDown,  boxParameter,  1.0f,  0.0f,  0.0f,   0.0, 3.0,
+        -boxParameter,  boxParameter -ceilingDown, -boxParameter,  1.0f,  0.0f,  0.0f,   3.0, 3.0,
+        -boxParameter, -boxParameter,              -boxParameter,  1.0f,  0.0f,  0.0f,   3.0, 0.0,
+        -boxParameter, -boxParameter,              -boxParameter,  1.0f,  0.0f,  0.0f,   3.0, 0.0,
+        -boxParameter, -boxParameter,               boxParameter,  1.0f,  0.0f,  0.0f,   0.0, 0.0,
+        -boxParameter,  boxParameter -ceilingDown,  boxParameter,  1.0f,  0.0f,  0.0f,   0.0, 3.0,
 
         //Ovde su otvori za hodnik
-        boxParameter,  boxParameter -ceilingDown,   boxParameter,  1.0f,  0.0f,  0.0f,   1.0, 3.0,
-         boxParameter,  boxParameter -ceilingDown,  0.2f,          1.0f,  0.0f,  0.0f,   0.0, 3.0,
-         boxParameter, -boxParameter,               0.2f,          1.0f,  0.0f,  0.0f,   0.0, 0.0,
-         boxParameter, -boxParameter,               0.2f,          1.0f,  0.0f,  0.0f,   0.0, 0.0,
-         boxParameter, -boxParameter,               boxParameter,  1.0f,  0.0f,  0.0f,   1.0, 0.0,
-         boxParameter,  boxParameter -ceilingDown,  boxParameter,  1.0f,  0.0f,  0.0f,   1.0, 3.0,
-
-         boxParameter,  boxParameter -ceilingDown, -0.2f,          1.0f,  0.0f,  0.0f,   1.0, 3.0,
-         boxParameter,  boxParameter -ceilingDown, -boxParameter,  1.0f,  0.0f,  0.0f,   0.0, 3.0,
-         boxParameter, -boxParameter,              -boxParameter,  1.0f,  0.0f,  0.0f,   0.0, 0.0,
-         boxParameter, -boxParameter,              -boxParameter,  1.0f,  0.0f,  0.0f,   0.0, 0.0,
-         boxParameter, -boxParameter,              -0.2f,          1.0f,  0.0f,  0.0f,   1.0, 0.0,
-         boxParameter,  boxParameter -ceilingDown, -0.2f,          1.0f,  0.0f,  0.0f,   1.0, 3.0
+        boxParameter,  boxParameter -ceilingDown,   boxParameter,  -1.0f,  0.0f,  0.0f,   1.0, 3.0,
+         boxParameter,  boxParameter -ceilingDown,  0.2f,          -1.0f,  0.0f,  0.0f,   0.0, 3.0,
+         boxParameter, -boxParameter,               0.2f,          -1.0f,  0.0f,  0.0f,   0.0, 0.0,
+         boxParameter, -boxParameter,               0.2f,          -1.0f,  0.0f,  0.0f,   0.0, 0.0,
+         boxParameter, -boxParameter,               boxParameter,  -1.0f,  0.0f,  0.0f,   1.0, 0.0,
+         boxParameter,  boxParameter -ceilingDown,  boxParameter,  -1.0f,  0.0f,  0.0f,   1.0, 3.0,
+                                                                   
+         boxParameter,  boxParameter -ceilingDown, -0.2f,          -1.0f,  0.0f,  0.0f,   1.0, 3.0,
+         boxParameter,  boxParameter -ceilingDown, -boxParameter,  -1.0f,  0.0f,  0.0f,   0.0, 3.0,
+         boxParameter, -boxParameter,              -boxParameter,  -1.0f,  0.0f,  0.0f,   0.0, 0.0,
+         boxParameter, -boxParameter,              -boxParameter,  -1.0f,  0.0f,  0.0f,   0.0, 0.0,
+         boxParameter, -boxParameter,              -0.2f,          -1.0f,  0.0f,  0.0f,   1.0, 0.0,
+         boxParameter,  boxParameter -ceilingDown, -0.2f,          -1.0f,  0.0f,  0.0f,   1.0, 3.0
     };
 
     unsigned int strideWall3D = (3 + 3 + 2) * sizeof(float);
@@ -299,12 +339,12 @@ int main()
     float hallwayVertices[] =
     {
          //X            Y                            Z      NX     NY     NZ      TX   TY
-        -boxParameter, -boxParameter,               -0.2f,  0.0f,  0.0f, -1.0f,   0.0, 0.0,
-         boxParameter, -boxParameter,               -0.2f,  0.0f,  0.0f, -1.0f,   3.0, 0.0,
-         boxParameter,  boxParameter - ceilingDown, -0.2f,  0.0f,  0.0f, -1.0f,   3.0, 3.0,
-         boxParameter,  boxParameter - ceilingDown, -0.2f,  0.0f,  0.0f, -1.0f,   3.0, 3.0,
-        -boxParameter,  boxParameter - ceilingDown, -0.2f,  0.0f,  0.0f, -1.0f,   0.0, 3.0,
-        -boxParameter, -boxParameter,               -0.2f,  0.0f,  0.0f, -1.0f,   0.0, 0.0,
+        -boxParameter, -boxParameter,               -0.2f,  0.0f,  0.0f, 1.0f,   0.0, 0.0,
+         boxParameter, -boxParameter,               -0.2f,  0.0f,  0.0f, 1.0f,   3.0, 0.0,
+         boxParameter,  boxParameter - ceilingDown, -0.2f,  0.0f,  0.0f, 1.0f,   3.0, 3.0,
+         boxParameter,  boxParameter - ceilingDown, -0.2f,  0.0f,  0.0f, 1.0f,   3.0, 3.0,
+        -boxParameter,  boxParameter - ceilingDown, -0.2f,  0.0f,  0.0f, 1.0f,   0.0, 3.0,
+        -boxParameter, -boxParameter,               -0.2f,  0.0f,  0.0f, 1.0f,   0.0, 0.0,
 
         -boxParameter, -boxParameter,                0.2f,  0.0f,  0.0f, 1.0f,    0.0, 0.0,
          boxParameter, -boxParameter,                0.2f,  0.0f,  0.0f, 1.0f,    3.0, 0.0,
@@ -504,10 +544,10 @@ int main()
     float zPic = (zBack + zFront) / 2;
     float pictureVertices[] =
     {
-        xLeftInner,  yUpInner,   zPic, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f,
-        xLeftInner,  yDownInner, zPic, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f,
-        xRightInner, yUpInner,   zPic, 0.0f, 0.0f, -1.0f, 1.0f, 1.0f,
-        xRightInner, yDownInner, zPic, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f
+        xLeftInner,  yUpInner,   zPic, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f,
+        xLeftInner,  yDownInner, zPic, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+        xRightInner, yUpInner,   zPic, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
+        xRightInner, yDownInner, zPic, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f
     };
 
     unsigned int pictureIndecies[] =
@@ -574,6 +614,89 @@ int main()
     glBindVertexArray(0);
 
     #pragma endregion
+
+    #pragma region PointLightSource
+    glm::vec3 pointLightPos = glm::vec3(-translationX, boxParameter - ceilingDown- 0.1, translationZ);
+    modelPointLight = glm::translate(modelPointLight, pointLightPos);
+    float pointLightVertices[] =
+    {
+         -0.1f, -0.1f, -0.1f,
+         0.1f, -0.1f, -0.1f,
+         0.1f,  0.1f, -0.1f,
+         0.1f,  0.1f, -0.1f,
+        -0.1f,  0.1f, -0.1f,
+        -0.1f, -0.1f, -0.1f,
+
+        -0.1f, -0.1f,  0.1f,
+         0.1f, -0.1f,  0.1f,
+         0.1f,  0.1f,  0.1f,
+         0.1f,  0.1f,  0.1f,
+        -0.1f,  0.1f,  0.1f,
+        -0.1f, -0.1f,  0.1f,
+
+        -0.1f,  0.1f,  0.1f,
+        -0.1f,  0.1f, -0.1f,
+        -0.1f, -0.1f, -0.1f,
+        -0.1f, -0.1f, -0.1f,
+        -0.1f, -0.1f,  0.1f,
+        -0.1f,  0.1f,  0.1f,
+
+         0.1f,  0.1f,  0.1f,
+         0.1f,  0.1f, -0.1f,
+         0.1f, -0.1f, -0.1f,
+         0.1f, -0.1f, -0.1f,
+         0.1f, -0.1f,  0.1f,
+         0.1f,  0.1f,  0.1f,
+
+        -0.1f, -0.1f, -0.1f,
+         0.1f, -0.1f, -0.1f,
+         0.1f, -0.1f,  0.1f,
+         0.1f, -0.1f,  0.1f,
+        -0.1f, -0.1f,  0.1f,
+        -0.1f, -0.1f, -0.1f,
+
+        -0.1f,  0.1f, -0.1f,
+         0.1f,  0.1f, -0.1f,
+         0.1f,  0.1f,  0.1f,
+         0.1f,  0.1f,  0.1f,
+        -0.1f,  0.1f,  0.1f,
+        -0.1f,  0.1f, -0.1f,
+    };
+
+    unsigned int VAOPOINTLIGHT;
+    glGenVertexArrays(1, &VAOPOINTLIGHT);
+    glBindVertexArray(VAOPOINTLIGHT);
+
+    unsigned int VBOPOINTLIGHT;
+    glGenBuffers(1, &VBOPOINTLIGHT);
+    glBindBuffer(GL_ARRAY_BUFFER, VBOPOINTLIGHT);
+
+    glBufferData(GL_ARRAY_BUFFER, sizeof(pointLightVertices), pointLightVertices, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    glBindVertexArray(0);
+
+    shader3D.use();
+
+    shader3D.use();
+    shader3D.setVec3("uPointLight.position", pointLightPos);
+    
+    shader3D.setVec3("uPointLight.ambient", 0.7f, 0.7f, 0.7f);
+    shader3D.setVec3("uPointLight.diffuse", 2.0f, 2.0f, 2.0f);
+    shader3D.setVec3("uPointLight.specular", 1.0f, 1.0f, 1.0f);
+    shader3D.setFloat("uPointLight.constant", 1.0f);
+    shader3D.setFloat("uPointLight.linear", 0.014f);
+    shader3D.setFloat("uPointLight.quadratic", 0.57f);
+    shader3D.setInt("uMaterial.diffuse", 0);
+    shader3D.setInt("uMaterial.specular", 1);
+    shader3D.setFloat("uMaterial.shininess", 32.0f);
+
+    bool lightOn = true;
+
+    #pragma endregion
+
+
    
     glEnable(GL_DEPTH_TEST);
     glCullFace(GL_BACK);
@@ -591,6 +714,24 @@ int main()
         {
             glfwSetWindowShouldClose(window, GL_TRUE);
         }
+        if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+        {
+            shader3D.use();
+            if (lightOn) 
+            {
+                shader3D.setVec3("uPointLight.ambient", 0.05f, 0.05f, 0.05f);
+                shader3D.setVec3("uPointLight.diffuse", 0.0f, 0.0f, 0.0f);
+                shader3D.setVec3("uPointLight.specular", 0.0f, 0.0f, 0.0f);
+            }
+            else 
+            {
+                shader3D.setVec3("uPointLight.ambient", 0.7f, 0.7f, 0.7f);
+                shader3D.setVec3("uPointLight.diffuse", 2.0f, 2.0f, 2.0f);
+                shader3D.setVec3("uPointLight.specular", 1.0f, 1.0f, 1.0f);
+            }
+            lightOn = !lightOn;
+        }
+
         if (glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS)
         {
             modelCircle1 = modelFrame1;
@@ -683,6 +824,7 @@ int main()
         shader3D.use();
         shader3D.setMat4("uV", camera.GetViewMatrix());
         shader3D.setMat4("uP", projectionP);
+        shader3D.setVec3("uViewPos", camera.Position);
         glUseProgram(0);
 
         frameShader.use();
@@ -710,6 +852,8 @@ int main()
         glBindVertexArray(VAO3D);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, wallTexture);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, wallTextureSpecular);
 
         glDrawArrays(GL_TRIANGLES, 0, 30);
 
@@ -725,6 +869,8 @@ int main()
         glBindVertexArray(VAO3D);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, wallWoodTexture);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, wallWoodTextureSpecular);
 
         glDrawArrays(GL_TRIANGLES, 0, 30);
 
@@ -740,6 +886,8 @@ int main()
         glBindVertexArray(VAOFLOOR);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, floorTexture);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, floorTextureSpecular);
 
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
@@ -755,6 +903,8 @@ int main()
         glBindVertexArray(VAOFLOOR);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, floorTexture);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, floorTextureSpecular);
 
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
@@ -770,6 +920,8 @@ int main()
         glBindVertexArray(VAOHALLWAY);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, floorTexture);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, floorTextureSpecular);
 
         glDrawArrays(GL_TRIANGLES, 0, 12);
 
@@ -785,6 +937,8 @@ int main()
         glBindVertexArray(VAOHALLWAYFLOOR);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, floorTexture);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, floorTextureSpecular);
 
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
@@ -815,8 +969,11 @@ int main()
         #pragma region Pictures
         shader3D.use();
         glBindVertexArray(VAOPICTURE);
-        glActiveTexture(GL_TEXTURE0);
+        
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, imagesTextureSpecular);
 
+        glActiveTexture(GL_TEXTURE0);
         shader3D.setMat4("uM", modelFrame1);
         glBindTexture(GL_TEXTURE_2D, firstImageTexture);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)(0 * sizeof(unsigned int)));
@@ -856,6 +1013,16 @@ int main()
         }
         #pragma endregion
 
+        #pragma region PointLight
+        frameShader.use();
+        frameShader.setVec3("color", glm::vec3(1.0, 1.0, 1.0));
+        frameShader.setMat4("uM", modelPointLight);
+        glBindVertexArray(VAOPOINTLIGHT);
+
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        glUseProgram(0);
+        glBindVertexArray(0);
+        #pragma endregion
 
         glm::vec3 toModelVector = angel.center - camera.Position;
         const float rotationThreshold = glm::radians(30.0f);
