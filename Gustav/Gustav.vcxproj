@@ -132,6 +132,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="basic.vert" />
+    <None Include="basic3D.frag" />
     <None Include="basic3D.vert" />
     <None Include="circle.frag" />
     <None Include="circle.vert" />

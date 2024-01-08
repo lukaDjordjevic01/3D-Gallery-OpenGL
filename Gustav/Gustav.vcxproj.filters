@@ -29,6 +29,7 @@
     <None Include="circle.vert" />
     <None Include="circle.frag" />
     <None Include="basic3D.vert" />
+    <None Include="basic3D.frag" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="shader.hpp">
