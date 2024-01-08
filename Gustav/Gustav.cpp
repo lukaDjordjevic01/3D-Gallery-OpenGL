@@ -18,9 +18,9 @@ unsigned int compileShader(GLenum type, const char* source);
 unsigned int createShader(const char* vsSource, const char* fsSource);
 static unsigned loadImageToTexture(const char* filePath);
 
-
 void rotateCamera(GLFWwindow* window, double xposIn, double yposIn);
 void zoomCamera(GLFWwindow* window, double xoffset, double yoffset);
+bool checkCameraPosition();
 
 const int NUMBER_OF_BUFFERS = 5;
 const int CIRCLE_POINTS = 30;
@@ -49,6 +49,14 @@ float lastY = wHeight / 2.0f;
 
 bool firstMouse = true;
 Camera camera(cameraPos, cameraUp, cameraFront, 0.0);
+float boxParameter = 0.5f;
+float translationX = 1.0f;
+float translationY = 0.0f;
+float translationZ = 0.0f;
+
+glm::vec3 minCameraCoords = glm::vec3(-boxParameter - translationX, -boxParameter - translationY, -boxParameter - translationZ);
+glm::vec3 maxCameraCoords = glm::vec3(boxParameter + translationX, boxParameter + translationY, boxParameter + translationZ);
+glm::vec3 oldCameraPosition = camera.Position;
 
 
 int main()
@@ -138,8 +146,8 @@ int main()
     shader3D.use();
     shader3D.setMat4("uP", projectionP);
     
-    modelRoom1 = glm::translate(modelRoom1, glm::vec3(-1.0, 0.0, 0.0));
-    modelRoom2 = glm::translate(modelRoom2, glm::vec3(1.0, 0.0, 0.0));
+    modelRoom1 = glm::translate(modelRoom1, glm::vec3(-translationX, translationY, translationZ));
+    modelRoom2 = glm::translate(modelRoom2, glm::vec3(translationX, translationY, translationZ));
     modelRoom2 = glm::rotate(modelRoom2, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     shader3D.setMat4("uV", camera.GetViewMatrix());
 
@@ -350,19 +358,31 @@ int main()
         }
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         {
+            oldCameraPosition = camera.Position;
             camera.ProcessKeyboard(FORWARD, deltaTime);
+            if (!checkCameraPosition())
+                camera.Position = oldCameraPosition;
         }
         if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
         {
+            oldCameraPosition = camera.Position;
             camera.ProcessKeyboard(BACKWARD, deltaTime);
+            if (!checkCameraPosition())
+                camera.Position = oldCameraPosition;
         }
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         {
+            oldCameraPosition = camera.Position;
             camera.ProcessKeyboard(RIGHT, deltaTime);
+            if (!checkCameraPosition())
+                camera.Position = oldCameraPosition;
         }
         if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
         {
+            oldCameraPosition = camera.Position;
             camera.ProcessKeyboard(LEFT, deltaTime);
+            if (!checkCameraPosition())
+                camera.Position = oldCameraPosition;
         }
         if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
         {
@@ -448,7 +468,7 @@ int main()
         shader3D.setMat4("uM", modelHallway);
         glBindVertexArray(VAOHALLWAY);
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, wallTexture);
+        glBindTexture(GL_TEXTURE_2D, floorTexture);
 
         glDrawArrays(GL_TRIANGLES, 0, 12);
 
@@ -628,4 +648,16 @@ void zoomCamera(GLFWwindow* window, double xoffset, double yoffset)
 {
     float realOffset = (yoffset / abs(yoffset)) * 0.1;
     camera.ProcessMouseScroll(realOffset);
+}
+bool checkCameraPosition() {
+    if (camera.Position.x <= minCameraCoords.x + 0.1 || camera.Position.x >= maxCameraCoords.x - 0.1 ||
+        camera.Position.y <= minCameraCoords.y + 0.1 || camera.Position.y >= maxCameraCoords.y - 0.1 ||
+        camera.Position.z <= minCameraCoords.z + 0.1 || camera.Position.z >= maxCameraCoords.z - 0.1)
+        return false;
+
+    if ((camera.Position.z <= -0.12 || camera.Position.z >= 0.12) &&
+        (camera.Position.x >= -0.6 && camera.Position.x <= 0.6)) return false;
+
+    return true;
+
 }
