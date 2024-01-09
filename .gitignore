@@ -80,7 +80,7 @@ StyleCopReport.xml
 *.meta
 *.obj
 
-!res/angel-model
+!res/angel-model/*.obj
 
 *.iobj
 *.pch
