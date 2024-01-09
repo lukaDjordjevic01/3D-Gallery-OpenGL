@@ -21,5 +21,28 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="basic.vert" />
+    <None Include="wallTexture.frag" />
+    <None Include="wallTexture.vert" />
+    <None Include="frameImageTexture.vert" />
+    <None Include="frameImageTexture.frag" />
+    <None Include="circle.vert" />
+    <None Include="circle.frag" />
+    <None Include="basic3D.vert" />
+    <None Include="basic3D.frag" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="shader.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="model.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mesh.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="camera.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
