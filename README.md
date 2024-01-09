@@ -1,1 +1,1 @@
-# 2D-Gallery-OpenGL
+# 3D-Gallery-OpenGL
