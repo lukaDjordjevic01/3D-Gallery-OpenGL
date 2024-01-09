@@ -108,7 +108,6 @@ int main()
     int polygonMode = GL_FILL;
 
     #pragma region TextureSetup
-    Shader wallTextureShader("wallTexture.vert", "wallTexture.frag");
     unsigned wallTexture = loadImageToTexture("res/wall.jpg");
     unsigned wallTextureSpecular = loadImageToTexture("res/wall-specular.png");
 
@@ -123,7 +122,7 @@ int main()
     unsigned thirdImageTexture = loadImageToTexture("res/gustav_image3.jpg");
     unsigned imagesTextureSpecular = loadImageToTexture("res/gustav_image-specular.png");
 
-    unsigned personalInfoTexture = loadImageToTexture("res/personal_info.jpg");
+    unsigned personalInfoTexture = loadImageToTexture("res/personal_info.png");
 
     glBindTexture(GL_TEXTURE_2D, wallTexture);
     glGenerateMipmap(GL_TEXTURE_2D);
@@ -782,19 +781,40 @@ int main()
     #pragma endregion
 
     #pragma region PersonalInfo
+    Shader personalInfoShader("basic.vert", "frameImageTexture.frag");
     float personalInfoVertices[] =
     {
-        0.6, -0.6, 1.0, 0.0, 1.0,
-        0.6, -1.0, 1.0, 0.0, 0.0,
-        1.0, -0.6, 1.0, 1.0, 1.0,
-        1.0, -1.0, 1.0, 1.0, 0.0
+        0.4, -0.6, 0.0, 1.0,
+        0.4, -1.0, 0.0, 0.0,
+        1.0, -0.6, 1.0, 1.0,
+        1.0, -1.0, 1.0, 0.0
     };
 
     unsigned int personalInfoIndecies[] =
     {
-        0, 1, 2,
-        1, 2, 3
+        0, 1, 3,
+        3, 2, 0
     };
+
+
+    unsigned int VAOPERSONAL;
+    glGenVertexArrays(1, &VAOPERSONAL);
+    glBindVertexArray(VAOPERSONAL);
+
+    unsigned int VBOPERSONAL;
+    glGenBuffers(1, &VBOPERSONAL);
+    glBindBuffer(GL_ARRAY_BUFFER, VBOPERSONAL);
+
+    glBufferData(GL_ARRAY_BUFFER, sizeof(personalInfoVertices), personalInfoVertices, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
+    unsigned int EBOPERSONAL;
+    glGenBuffers(1, &EBOPERSONAL);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBOPERSONAL);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(personalInfoIndecies), personalInfoIndecies, GL_STATIC_DRAW);
     #pragma endregion
    
     glEnable(GL_DEPTH_TEST);
@@ -1203,6 +1223,22 @@ int main()
 
         glUseProgram(0);
         glBindVertexArray(0);
+        #pragma endregion
+
+        #pragma region PersonalInfo
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        personalInfoShader.use();
+        glBindVertexArray(VAOPERSONAL);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, personalInfoTexture);
+
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)(0 * sizeof(unsigned int)));
+
+        glDisable(GL_BLEND);
+        glUseProgram(0);
+        glBindVertexArray(0);
+
         #pragma endregion
 
         glm::vec3 toModelVector = angel.center - camera.Position;

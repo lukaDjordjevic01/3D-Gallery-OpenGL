@@ -20,7 +20,7 @@ uniform bool isImage;
 void main()
 {
 	chFragPos = vec3(uM * vec4(inPos, 1.0));
-	gl_Position = uP * uV * vec4(chFragPos, 1.0); //Zbog nekomutativnosti mnozenja matrica, moramo mnoziti MVP matrice i tjemena "unazad"
+	gl_Position = uP * uV * vec4(chFragPos, 1.0);
 	chTex = inTex;
 	if (isImage)
 	{
