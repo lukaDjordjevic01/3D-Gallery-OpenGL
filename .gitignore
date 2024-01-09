@@ -80,7 +80,7 @@ StyleCopReport.xml
 *.meta
 *.obj
 
-!res/angel-model/*.obj
+!Gustav/res/angel-model/12147_angelwings_V2_L2.obj
 
 *.iobj
 *.pch
