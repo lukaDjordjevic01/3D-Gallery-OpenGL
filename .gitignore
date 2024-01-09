@@ -78,10 +78,6 @@ StyleCopReport.xml
 *_h.h
 *.ilk
 *.meta
-*.obj
-
-!Gustav/res/angel-model/12147_angelwings_V2_L2.obj
-
 *.iobj
 *.pch
 *.pdb
