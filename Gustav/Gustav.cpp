@@ -21,6 +21,8 @@ static unsigned loadImageToTexture(const char* filePath);
 void rotateCamera(GLFWwindow* window, double xposIn, double yposIn);
 void zoomCamera(GLFWwindow* window, double xoffset, double yoffset);
 bool checkCameraPosition();
+
+void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 #pragma endregion
 
 #pragma region Globals
@@ -37,7 +39,7 @@ unsigned int wWidth = 1600;
 unsigned int wHeight = 800;
 
 
-glm::vec3 cameraPos = glm::vec3(-1.0f, -0.5f, 0.0f);
+glm::vec3 cameraPos = glm::vec3(-2.0f, -0.5f, 0.0f);
 glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, 0.0f);
 glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 glm::vec3 cameraRight = glm::normalize(glm::cross(cameraFront, cameraUp));
@@ -65,7 +67,6 @@ glm::vec3 oldCameraPosition = camera.Position;
 
 int main()
 {
-    cout << camera.Position.x << camera.Position.y << camera.Position.z << endl;
     camera.MovementSpeed = 1.0f;
     #pragma region Setup
     if (!glfwInit()) // !0 == 1  | glfwInit inicijalizuje GLFW i vrati 1 ako je inicijalizovana uspjesno, a 0 ako nije
@@ -214,6 +215,7 @@ int main()
     glm::mat4 modelFrame3 = glm::mat4(1.0f);
 
     glm::mat4 modelPointLight = glm::mat4(1.0f);
+    glm::mat4 modelAngelSpotLight = glm::mat4(1.0f);
     
     glm::mat4 projectionP = glm::perspective(camera.Zoom, (float)wWidth / (float)wHeight, 0.1f, 100.0f); //Matrica perspektivne projekcije (FOV, Aspect Ratio, prednja ravan, zadnja ravan)
 
@@ -346,12 +348,12 @@ int main()
         -boxParameter,  boxParameter - ceilingDown, -0.2f,  0.0f,  0.0f, 1.0f,   0.0, 3.0,
         -boxParameter, -boxParameter,               -0.2f,  0.0f,  0.0f, 1.0f,   0.0, 0.0,
 
-        -boxParameter, -boxParameter,                0.2f,  0.0f,  0.0f, 1.0f,    0.0, 0.0,
-         boxParameter, -boxParameter,                0.2f,  0.0f,  0.0f, 1.0f,    3.0, 0.0,
-         boxParameter,  boxParameter - ceilingDown,  0.2f,  0.0f,  0.0f, 1.0f,    3.0, 3.0,
-         boxParameter,  boxParameter - ceilingDown,  0.2f,  0.0f,  0.0f, 1.0f,    3.0, 3.0,
-        -boxParameter,  boxParameter - ceilingDown,  0.2f,  0.0f,  0.0f, 1.0f,    0.0, 3.0,
-        -boxParameter, -boxParameter,                0.2f,  0.0f,  0.0f, 1.0f,    0.0, 0.0,
+        -boxParameter, -boxParameter,                0.2f,  0.0f,  0.0f, -1.0f,    0.0, 0.0,
+         boxParameter, -boxParameter,                0.2f,  0.0f,  0.0f, -1.0f,    3.0, 0.0,
+         boxParameter,  boxParameter - ceilingDown,  0.2f,  0.0f,  0.0f, -1.0f,    3.0, 3.0,
+         boxParameter,  boxParameter - ceilingDown,  0.2f,  0.0f,  0.0f, -1.0f,    3.0, 3.0,
+        -boxParameter,  boxParameter - ceilingDown,  0.2f,  0.0f,  0.0f, -1.0f,    0.0, 3.0,
+        -boxParameter, -boxParameter,                0.2f,  0.0f,  0.0f, -1.0f,    0.0, 0.0,
     };
 
     unsigned int strideHallway = (3 + 3 + 2) * sizeof(float);
@@ -379,7 +381,7 @@ int main()
     #pragma region HallwayFloor
     float hallwayFloorVertices[] =
     {
-        //X     Y      Z       NX    NY     NZ
+        //X     Y      Z              NX    NY     NZ
       -boxParameter, -boxParameter, -0.2f,  0.0f,  1.0f, 0.0f,   0.0, 3.0,
        -boxParameter, -boxParameter, 0.2f,  0.0f,  1.0f, 0.0f,   0.0, 0.0,
        boxParameter,  -boxParameter, 0.2f,  0.0f,  1.0f, 0.0f,   3.0, 0.0,
@@ -615,7 +617,7 @@ int main()
 
     #pragma endregion
 
-    #pragma region PointLightSource
+    #pragma region PointLightSetup
     glm::vec3 pointLightPos = glm::vec3(-translationX, boxParameter - ceilingDown- 0.1, translationZ);
     modelPointLight = glm::translate(modelPointLight, pointLightPos);
     float pointLightVertices[] =
@@ -678,36 +680,116 @@ int main()
     glBindVertexArray(0);
 
     shader3D.use();
-
-    shader3D.use();
     shader3D.setVec3("uPointLight.position", pointLightPos);
+    shader3D.setBool("uPointLight.on", true);
     
     shader3D.setVec3("uPointLight.ambient", 0.7f, 0.7f, 0.7f);
     shader3D.setVec3("uPointLight.diffuse", 2.0f, 2.0f, 2.0f);
     shader3D.setVec3("uPointLight.specular", 1.0f, 1.0f, 1.0f);
     shader3D.setFloat("uPointLight.constant", 1.0f);
     shader3D.setFloat("uPointLight.linear", 0.014f);
-    shader3D.setFloat("uPointLight.quadratic", 0.57f);
+    shader3D.setFloat("uPointLight.quadratic", 0.67f);
     shader3D.setInt("uMaterial.diffuse", 0);
     shader3D.setInt("uMaterial.specular", 1);
-    shader3D.setFloat("uMaterial.shininess", 32.0f);
+    shader3D.setFloat("uMaterial.shininess", 8.0f);
 
     bool lightOn = true;
 
     #pragma endregion
 
+    #pragma region AngelSpotLightSetup
+    glm::vec3 angelSpotLightPos = glm::vec3(translationX, boxParameter - ceilingDown - 0.1, translationZ);
+    modelAngelSpotLight = glm::translate(modelAngelSpotLight, angelSpotLightPos);
 
+    shader3D.use();
+    shader3D.setVec3("uSpotLightAngel.position", angelSpotLightPos);
+    shader3D.setVec3("uSpotLightAngel.direction", glm::vec3(0.0f, -1.0f, 0.0f));
+    shader3D.setFloat("uSpotLightAngel.cutOff", glm::cos(glm::radians(22.5f)));
+    shader3D.setFloat("uSpotLightAngel.outerCutOff", glm::cos(glm::radians(27.5f)));
+    shader3D.setBool("uSpotLightAngel.on", true);
+
+    shader3D.setVec3("uSpotLightAngel.ambient", 0.25f, 0.25f, 0.25f);
+    shader3D.setVec3("uSpotLightAngel.diffuse", 1.0f, 1.0f, 1.0f);
+    shader3D.setVec3("uSpotLightAngel.specular", 1.0f, 1.0f, 1.0f);
+    shader3D.setFloat("uSpotLightAngel.constant", 1.0f);
+    shader3D.setFloat("uSpotLightAngel.linear", 0.09f);
+    shader3D.setFloat("uSpotLightAngel.quadratic", 0.032f);
+    #pragma endregion
+
+    #pragma region FlashLightSetup
+    shader3D.use();
+    shader3D.setFloat("uFlashLight.cutOff", glm::cos(glm::radians(12.5f)));
+    shader3D.setFloat("uFlashLight.outerCutOff", glm::cos(glm::radians(17.5f)));
+    shader3D.setBool("uFlashLight.on", false);
+
+    shader3D.setVec3("uFlashLight.ambient", 0.1f, 0.1f, 0.1f);
+    shader3D.setVec3("uFlashLight.diffuse", 1.0f, 1.0f, 1.0f);
+    shader3D.setVec3("uFlashLight.specular", 0.8f, 0.8f, 0.8f);
+    shader3D.setFloat("uFlashLight.constant", 1.0f);
+    shader3D.setFloat("uFlashLight.linear", 0.09f);
+    shader3D.setFloat("uFlashLight.quadratic", 0.132f);
+
+    bool flashLightOn = false;
+    #pragma endregion
+
+    #pragma region LightSwitch
+    glm::vec3 lightSwitchPos = glm::vec3(boxParameter - 0.001, cameraPos.y + 0.05, -0.3);
+    lightSwitchPos += glm::vec3(-translationX, translationY, translationZ);
+    float switchVertices[] =
+    {
+        boxParameter - 0.001, cameraPos.y,        -0.25,
+        boxParameter - 0.001, cameraPos.y + 0.1,  -0.25,
+        boxParameter - 0.001, cameraPos.y + 0.1,  -0.35,
+        boxParameter - 0.001, cameraPos.y,        -0.35,
+    };
+    unsigned int switchIndecies[] =
+    {
+        0, 1, 2,
+        2, 3, 0
+    };
+
+    unsigned int VAOSWITCH;
+    glGenVertexArrays(1, &VAOSWITCH);
+    glBindVertexArray(VAOSWITCH);
+
+    unsigned int VBOSWITCH;
+    glGenBuffers(1, &VBOSWITCH);
+    glBindBuffer(GL_ARRAY_BUFFER, VBOSWITCH);
+
+    glBufferData(GL_ARRAY_BUFFER, sizeof(switchVertices), switchVertices, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    unsigned int EBOSWITCH;
+    glGenBuffers(1, &EBOSWITCH);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBOSWITCH);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(switchIndecies), switchIndecies, GL_STATIC_DRAW);
+
+    glBindVertexArray(0);
+    #pragma endregion
    
     glEnable(GL_DEPTH_TEST);
     glCullFace(GL_BACK);
+    float lastChangedLight = 0;
+    float deltaLightTime;
+
+    glfwSetKeyCallback(window, keyCallback);
 
     #pragma region RenderingLoop
     while (!glfwWindowShouldClose(window)) 
     {
+        glm::vec3 angelLightColor;
+        angelLightColor.x = sin(glfwGetTime() * 2.0f);
+        angelLightColor.y = sin(glfwGetTime() * 0.7f);
+        angelLightColor.z = sin(glfwGetTime() * 1.3f);
+
+        float cameraSwitchDistance = glm::distance(camera.Position, lightSwitchPos);
 
         float currentFrame = static_cast<float>(glfwGetTime());
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
+
+        deltaLightTime = currentFrame - lastChangedLight;
 
         #pragma region KeyHandle
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -717,19 +799,42 @@ int main()
         if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
         {
             shader3D.use();
-            if (lightOn) 
+            if (deltaLightTime > 0.5 && cameraSwitchDistance <= 0.28)
             {
-                shader3D.setVec3("uPointLight.ambient", 0.05f, 0.05f, 0.05f);
-                shader3D.setVec3("uPointLight.diffuse", 0.0f, 0.0f, 0.0f);
-                shader3D.setVec3("uPointLight.specular", 0.0f, 0.0f, 0.0f);
+                if (lightOn)
+                {
+                    //potencijalno ovako   shader3D.setBool("uPointLight.on", false);
+                    shader3D.setVec3("uPointLight.ambient", 0.1f, 0.1f, 0.1f);
+                    shader3D.setVec3("uPointLight.diffuse", 0.0f, 0.0f, 0.0f);
+                    shader3D.setVec3("uPointLight.specular", 0.0f, 0.0f, 0.0f);
+                }
+                else
+                {
+                    //potencijalno ovako shader3D.setBool("uPointLight.on", true);
+                    shader3D.setVec3("uPointLight.ambient", 0.7f, 0.7f, 0.7f);
+                    shader3D.setVec3("uPointLight.diffuse", 2.0f, 2.0f, 2.0f);
+                    shader3D.setVec3("uPointLight.specular", 1.0f, 1.0f, 1.0f);
+                }
+                lightOn = !lightOn;
+                lastChangedLight = currentFrame;
             }
-            else 
+        }
+        if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
+        {
+            shader3D.use();
+            if (deltaLightTime > 0.5)
             {
-                shader3D.setVec3("uPointLight.ambient", 0.7f, 0.7f, 0.7f);
-                shader3D.setVec3("uPointLight.diffuse", 2.0f, 2.0f, 2.0f);
-                shader3D.setVec3("uPointLight.specular", 1.0f, 1.0f, 1.0f);
+                if (flashLightOn)
+                {
+                    shader3D.setBool("uFlashLight.on", false);
+                }
+                else
+                {
+                    shader3D.setBool("uFlashLight.on", true);
+                }
+                flashLightOn = !flashLightOn;
+                lastChangedLight = currentFrame;
             }
-            lightOn = !lightOn;
         }
 
         if (glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS)
@@ -825,6 +930,10 @@ int main()
         shader3D.setMat4("uV", camera.GetViewMatrix());
         shader3D.setMat4("uP", projectionP);
         shader3D.setVec3("uViewPos", camera.Position);
+        shader3D.setVec3("uFlashLight.position", camera.Position);
+        shader3D.setVec3("uFlashLight.direction", camera.Front);
+        shader3D.setVec3("uSpotLightAngel.ambient", angelLightColor * glm::vec3(0.8f) * glm::vec3(0.2f));
+        shader3D.setVec3("uSpotLightAngel.diffuse", angelLightColor * glm::vec3(0.8f));
         glUseProgram(0);
 
         frameShader.use();
@@ -1015,11 +1124,35 @@ int main()
 
         #pragma region PointLight
         frameShader.use();
-        frameShader.setVec3("color", glm::vec3(1.0, 1.0, 1.0));
+        if (lightOn)
+            frameShader.setVec3("color", glm::vec3(1.0, 1.0, 1.0));
         frameShader.setMat4("uM", modelPointLight);
         glBindVertexArray(VAOPOINTLIGHT);
 
         glDrawArrays(GL_TRIANGLES, 0, 36);
+        glUseProgram(0);
+        glBindVertexArray(0);
+        #pragma endregion
+
+        #pragma region AngelSpotLight
+        frameShader.use();
+        frameShader.setVec3("color", angelLightColor);
+        frameShader.setMat4("uM", modelAngelSpotLight);
+        glBindVertexArray(VAOPOINTLIGHT);
+
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        glUseProgram(0);
+        glBindVertexArray(0);
+        #pragma endregion
+
+        #pragma region LightSwitch
+        frameShader.use();
+        frameShader.setVec3("color", glm::vec3(0.0, 0.0, 0.0));
+        glBindVertexArray(VAOSWITCH);
+
+        frameShader.setMat4("uM", modelRoom1);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)(0 * sizeof(unsigned int)));
+
         glUseProgram(0);
         glBindVertexArray(0);
         #pragma endregion
@@ -1035,8 +1168,9 @@ int main()
             model2 = glm::rotate(model2, glm::radians(-0.3f), glm::vec3(0.0f, 1.0f, 0.0f));
         }
 
-        modelShader.use();
-        angel.Draw(modelShader);
+        shader3D.use();
+        shader3D.setMat4("uM", model2);
+        angel.Draw(shader3D);
         glUseProgram(0);
 
         glfwSwapBuffers(window);
@@ -1193,5 +1327,15 @@ bool checkCameraPosition() {
 
     return true;
 
+}
+
+void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+    if (key == GLFW_KEY_1 && action == GLFW_PRESS && mods == GLFW_MOD_ALT) {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    }
+    else if (key == GLFW_KEY_2 && action == GLFW_PRESS && mods == GLFW_MOD_ALT) {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    }
 }
 #pragma endregion
