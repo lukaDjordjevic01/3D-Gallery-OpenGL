@@ -123,6 +123,8 @@ int main()
     unsigned thirdImageTexture = loadImageToTexture("res/gustav_image3.jpg");
     unsigned imagesTextureSpecular = loadImageToTexture("res/gustav_image-specular.png");
 
+    unsigned personalInfoTexture = loadImageToTexture("res/personal_info.jpg");
+
     glBindTexture(GL_TEXTURE_2D, wallTexture);
     glGenerateMipmap(GL_TEXTURE_2D);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -196,6 +198,14 @@ int main()
     glBindTexture(GL_TEXTURE_2D, 0);
 
     glBindTexture(GL_TEXTURE_2D, imagesTextureSpecular);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    glBindTexture(GL_TEXTURE_2D, personalInfoTexture);
     glGenerateMipmap(GL_TEXTURE_2D);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -769,6 +779,22 @@ int main()
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(switchIndecies), switchIndecies, GL_STATIC_DRAW);
 
     glBindVertexArray(0);
+    #pragma endregion
+
+    #pragma region PersonalInfo
+    float personalInfoVertices[] =
+    {
+        0.6, -0.6, 1.0, 0.0, 1.0,
+        0.6, -1.0, 1.0, 0.0, 0.0,
+        1.0, -0.6, 1.0, 1.0, 1.0,
+        1.0, -1.0, 1.0, 1.0, 0.0
+    };
+
+    unsigned int personalInfoIndecies[] =
+    {
+        0, 1, 2,
+        1, 2, 3
+    };
     #pragma endregion
    
     glEnable(GL_DEPTH_TEST);
