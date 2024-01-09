@@ -221,6 +221,9 @@ int main()
 
     shader3D.use();
     shader3D.setMat4("uP", projectionP);
+    shader3D.setBool("isImage", false);
+    shader3D.setBool("flipHorizontal", false);
+    shader3D.setBool("flipVertical", false);
     
     modelRoom1 = glm::translate(modelRoom1, glm::vec3(-translationX, translationY, translationZ));
     modelRoom2 = glm::translate(modelRoom2, glm::vec3(translationX, translationY, translationZ));
@@ -773,6 +776,7 @@ int main()
     float lastChangedLight = 0;
     float deltaLightTime;
 
+    glLineWidth(3.0f);
     glfwSetKeyCallback(window, keyCallback);
 
     #pragma region RenderingLoop
@@ -795,6 +799,22 @@ int main()
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         {
             glfwSetWindowShouldClose(window, GL_TRUE);
+        }
+        if (glfwGetKey(window, GLFW_KEY_6) == GLFW_PRESS)
+        {
+            shader3D.use();
+            shader3D.setBool("flipHorizontal", true);
+        }
+        if (glfwGetKey(window, GLFW_KEY_7) == GLFW_PRESS)
+        {
+            shader3D.use();
+            shader3D.setBool("flipVertical", true);
+        }
+        if (glfwGetKey(window, GLFW_KEY_8) == GLFW_PRESS)
+        {
+            shader3D.use();
+            shader3D.setBool("flipHorizontal", false);
+            shader3D.setBool("flipVertical", false);
         }
         if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
         {
@@ -1077,6 +1097,7 @@ int main()
 
         #pragma region Pictures
         shader3D.use();
+        shader3D.setBool("isImage", true);
         glBindVertexArray(VAOPICTURE);
         
         glActiveTexture(GL_TEXTURE1);
@@ -1095,6 +1116,7 @@ int main()
         glBindTexture(GL_TEXTURE_2D, thirdImageTexture);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)(0 * sizeof(unsigned int)));
 
+        shader3D.setBool("isImage", false);
         glUseProgram(0);
         glBindVertexArray(0);
         #pragma endregion
